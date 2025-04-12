@@ -2,84 +2,21 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Merriweather', serif;
-  background: linear-gradient(145deg, #d7e8d0, #c1d9b4);
-  background-attachment: fixed;
-  color: #2e4a2d;
-}
-
-
-
-h1, h2 {
-  color: #245632;
-  text-shadow: 1px 1px 2px #cde5d3;
-}
-
-input, button, textarea {
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-family: inherit;
-  font-size: 1rem;
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-button {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-button:hover {
-  background-color: #3c8d40;
-}
-
-textarea {
-  resize: none;
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: #1d3520; /* Dark forest green */
+  color: #e6ffe6; /* Soft light green text */
 }
 
 .card-tile {
-  background-color: rgba(255, 255, 255, 0.85);
-  border-radius: 10px;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  text-align: center;
   border: 2px solid #ccc;
-  padding: 10px;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  background-color: #2a4d31;
+  color: #fff;
+  cursor: pointer;
 }
 
 .card-tile.selected {
   border-color: #4caf50;
-  background-color: #e7f4e4;
-  box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
-}
-
-input[type="number"] {
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.5rem;
-  background-color: white;
-}
-
-label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 0.25rem;
-  color: #1f3a20;
-  text-shadow: 0 1px 1px #e3f0e6;
-}
-
-/* Scroll bar slight cleanup */
-textarea::-webkit-scrollbar {
-  width: 8px;
-}
-
-textarea::-webkit-scrollbar-thumb {
-  background-color: #8bc34a;
-  border-radius: 4px;
-}
-
-textarea::-webkit-scrollbar-thumb:hover {
-  background-color: #689f38;
+  background-color: #3e7c4e;
 }
