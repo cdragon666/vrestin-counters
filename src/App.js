@@ -1,19 +1,26 @@
+
 import { useState } from "react";
 
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales", bonus: 1 },
   { id: "branching_evolution", name: "Branching Evolution", multiplier: 2 },
-  { id: "kami", name: "Kami of the Whispered Hopes", multiplier: 2 },
-  { id: "conclave_mentor", name: "Conclave Mentor", bonus: 1 },
+  { id: "kami", name: "Kami of Whispered Hopes", multiplier: 2 },
+  { id: "innkeeper", name: "Innkeeper's Talent", multiplier: 2 },
   { id: "ozolith", name: "Ozolith, the Shattered Spire", bonus: 1 },
-  { id: "anduril", name: "Andúril, Narsil Reforged", flat: 2 },
+  { id: "conclave_mentor", name: "Conclave Mentor", bonus: 1 },
+  { id: "anduril", name: "Andúril Equipped", anduril: true },
+  { id: "citys_blessing", name: "City's Blessing (10+ permanents)", city: true },
+  { id: "unicorn", name: "Good-Fortune Unicorn (ETB trigger)", etbBonus: 1 },
+  { id: "crawler", name: "Duskshell Crawler (ETB trigger)", etbBonus: 1 },
+  { id: "hornbeetle", name: "Iridescent Hornbeetle (token maker)", makesTokens: true }
 ];
 
 export default function App() {
   const [selectedCards, setSelectedCards] = useState([]);
-  const [baseCounters, setBaseCounters] = useState(0);
-  const [result, setResult] = useState(null);
-  const [log, setLog] = useState([]);
+  const [vrestinX, setVrestinX] = useState(0);
+  const [creatureCount, setCreatureCount] = useState(0);
+  const [insectCount, setInsectCount] = useState(0);
+  const [resultLog, setResultLog] = useState([]);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -21,46 +28,75 @@ export default function App() {
     );
   };
 
-  const calculateTotal = () => {
-    let total = Number(baseCounters);
-    let bonus = 0;
+  const has = (id) => selectedCards.includes(id);
+
+  const calculateETB = () => {
+    let base = parseInt(vrestinX);
+    let tokens = base; // Vrestin creates X insect tokens
+    let counterBonus = 0;
     let multiplier = 1;
-    let flat = 0;
-    let breakdown = [];
+    let tokenBonus = 0;
 
     supportCards.forEach((card) => {
-      if (selectedCards.includes(card.id)) {
-        if (card.flat) {
-          flat += card.flat;
-          breakdown.push(`+${card.flat} (from ${card.name})`);
-        }
-        if (card.bonus) {
-          bonus += card.bonus;
-          breakdown.push(`+${card.bonus} (bonus from ${card.name})`);
-        }
-        if (card.multiplier) {
-          multiplier *= card.multiplier;
-          breakdown.push(`x${card.multiplier} (multiplier from ${card.name})`);
-        }
+      if (has(card.id)) {
+        if (card.bonus) counterBonus += card.bonus;
+        if (card.multiplier) multiplier *= card.multiplier;
+        if (card.etbBonus) counterBonus += card.etbBonus;
       }
     });
 
-    const final = Math.ceil((total + bonus + flat) * multiplier);
-    setResult(final);
+    const vrestinFinal = Math.ceil((base + counterBonus) * multiplier);
+    const finalInsectCount = tokens;
+    const insectCounters = Math.ceil((has("unicorn") ? 1 : 0) + (has("conclave_mentor") ? 1 : 0) + (has("hardened_scales") ? 1 : 0));
+    const finalInsectCounters = Math.ceil((1 + insectCounters) * multiplier);
 
-    const logEntry = `Base: ${total} | ${breakdown.join(" | ")} => Total: ${final}`;
-    setLog((prev) => [logEntry, ...prev]);
+    let log = `Vrestin ETB: ${base} base + ${counterBonus} bonus x${multiplier} => ${vrestinFinal} counters\n`;
+    log += `Created ${tokens} insects. Each gets +${finalInsectCounters} (from ETB triggers)\n`;
+
+    if (has("hornbeetle")) {
+      const extraTokens = vrestinFinal;
+      log += `Iridescent Hornbeetle creates ${extraTokens} insect tokens from Vrestin's counters\n`;
+      tokens += extraTokens;
+    }
+
+    setCreatureCount(1 + tokens);
+    setInsectCount(tokens);
+    setResultLog((prev) => [log, ...prev]);
   };
 
-  const clearLog = () => setLog([]);
+  const handleCombat = () => {
+    let log = `Combat Phase:\n`;
+    let bonus = 0;
+    let multiplier = 1;
+    let flat = 0;
+
+    if (has("branching_evolution")) multiplier *= 2;
+    if (has("kami")) multiplier *= 2;
+    if (has("innkeeper")) multiplier *= 2;
+    if (has("conclave_mentor")) bonus += 1;
+    if (has("hardened_scales")) bonus += 1;
+    if (has("ozolith")) bonus += 1;
+
+    const insectCounters = Math.ceil((1 + bonus) * multiplier);
+    const andurilCounters = has("citys_blessing") ? 2 : 1;
+    const allCounters = Math.ceil((andurilCounters + bonus) * multiplier);
+
+    if (insectCount > 0) log += `Insects (${insectCount}) get +${insectCounters} counters each from Vrestin and bonuses\n`;
+    if (has("anduril")) log += `All creatures (${creatureCount}) get +${allCounters} counters from Andúril\n`;
+
+    setResultLog((prev) => [log, ...prev]);
+  };
+
+  const clearLog = () => setResultLog([]);
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "600px", margin: "auto" }}>
+    <div style={{ padding: "2rem", maxWidth: "700px", margin: "auto" }}>
       <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", textAlign: "center" }}>
-        +1/+1 Counter Calculator
+        Vrestin +1/+1 Counter Calculator
       </h1>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
+      <h2 style={{ marginTop: "1.5rem" }}>Select Active Cards</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
         {supportCards.map((card) => (
           <div
             key={card.id}
@@ -80,41 +116,36 @@ export default function App() {
         ))}
       </div>
 
-      <div style={{ marginTop: "1rem" }}>
-        <label htmlFor="base" style={{ display: "block", marginBottom: "0.5rem" }}>
-          Base Counters
-        </label>
-        <input
-          id="base"
-          type="number"
-          value={baseCounters}
-          onChange={(e) => setBaseCounters(e.target.value)}
-          style={{ width: "100%", padding: "0.5rem" }}
-        />
-      </div>
-
-      <button onClick={calculateTotal} style={{ marginTop: "1rem", width: "100%", padding: "0.75rem", fontWeight: "bold" }}>
-        Calculate
+      <h2 style={{ marginTop: "2rem" }}>Vrestin Entry</h2>
+      <label htmlFor="vrestinX">X value when casting Vrestin:</label>
+      <input
+        id="vrestinX"
+        type="number"
+        value={vrestinX}
+        onChange={(e) => setVrestinX(e.target.value)}
+        style={{ width: "100%", padding: "0.5rem", marginTop: "0.5rem" }}
+      />
+      <button onClick={calculateETB} style={{ marginTop: "1rem", width: "100%", padding: "0.75rem", fontWeight: "bold" }}>
+        Vrestin ETB (Calculate)
       </button>
 
-      {result !== null && (
-        <div style={{ marginTop: "1rem", fontSize: "1.25rem", textAlign: "center", fontWeight: "bold" }}>
-          Total Counters: {result}
-        </div>
-      )}
+      <h2 style={{ marginTop: "2rem" }}>Combat Phase</h2>
+      <button onClick={handleCombat} style={{ width: "100%", padding: "0.75rem", fontWeight: "bold" }}>
+        Attack with Insects
+      </button>
 
-      {log.length > 0 && (
+      {resultLog.length > 0 && (
         <div style={{ marginTop: "2rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h2 style={{ fontSize: "1.2rem" }}>Calculation History</h2>
+            <h2 style={{ fontSize: "1.2rem" }}>Result Log</h2>
             <button onClick={clearLog} style={{ fontSize: "0.9rem", padding: "0.3rem 0.6rem" }}>
               Clear
             </button>
           </div>
           <textarea
             readOnly
-            value={log.join("\n")}
-            style={{ width: "100%", height: "150px", marginTop: "1rem", fontFamily: "monospace", padding: "0.5rem" }}
+            value={resultLog.join("\n----------------------\n")}
+            style={{ width: "100%", height: "200px", marginTop: "1rem", fontFamily: "monospace", padding: "0.5rem" }}
           />
         </div>
       )}
