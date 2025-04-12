@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 const supportCards = [
@@ -74,18 +75,19 @@ export default function App() {
     const insectFinal = Math.ceil(insectBonus * multiplier);
 
     const totalETBCounters = vrestinCounters + (base * insectFinal);
-    addToTracker(totalETBCounters);
-
-    let log = `Vrestin enters with ${vrestinCounters} counters.\n`;
-    log += `${base} Insect tokens created. Each gets +${insectFinal} counters.\n`;
+    let counterLog = totalETBCounters;
 
     const newCreatures = [
       { name: "Vrestin", counters: vrestinCounters },
       ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectFinal }))
     ];
 
+    let log = `Vrestin enters with ${vrestinCounters} counters.\n`;
+    log += `${base} Insect tokens created. Each gets +${insectFinal} counters.`;
+
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
+    addToTracker(counterLog);
   };
 
   const handleCombat = () => {
@@ -94,19 +96,23 @@ export default function App() {
     const andurilBase = has("citys_blessing") ? 2 : 1;
     const andurilBonus = Math.ceil((andurilBase + getBaseCounterBonus()) * getMultiplier());
 
+    let totalCombatCounters = 0;
     const updatedCreatures = creatures.map((c) => {
       const name = c.name.toLowerCase();
       const isInsect = name.includes("insect") || name.includes("vrestin");
       let added = 0;
       if (isInsect) added += insectBonus;
       if (has("anduril")) added += andurilBonus;
-      addToTracker(added);
+      totalCombatCounters += added;
       return { ...c, counters: c.counters + added };
     });
 
-    log += `All insects get +${insectBonus}, all creatures get +${has("anduril") ? andurilBonus : 0} from Andúril.\n`;
     setCreatures(updatedCreatures);
-    setResultLog((prev) => [log, ...prev]);
+    setResultLog((prev) => [
+      `${log}All insects get +${insectBonus}, all creatures get +${has("anduril") ? andurilBonus : 0} from Andúril.`,
+      ...prev
+    ]);
+    addToTracker(totalCombatCounters);
   };
 
   const handleEndStep = () => {
@@ -269,4 +275,3 @@ export default function App() {
     </div>
   );
 }
-
