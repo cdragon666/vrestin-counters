@@ -71,19 +71,21 @@ export default function App() {
     if (has("conclave_mentor")) insectBonus += 1;
     if (has("crawler")) insectBonus += 1;
     if (has("hardened_scales")) insectBonus += 1;
-    const insectFinal = Math.ceil(insectBonus * multiplier);
+
+    // If there are any ETB triggers, at least 1 counter is given
+    const etbPresent = has("unicorn") || has("crawler");
+    const insectFinal = etbPresent ? Math.ceil((1 + getBaseCounterBonus()) * multiplier) : Math.ceil(insectBonus * multiplier);
+
+    const totalETBCounters = vrestinCounters + (base * insectFinal);
+    addToTracker(totalETBCounters);
 
     let log = `Vrestin enters with ${vrestinCounters} counters.\n`;
-    log += `${base} Insect tokens created. Each gets +${insectFinal} counters.`;
+    log += `${base} Insect tokens created. Each gets +${insectFinal} counters.\n`;
 
     const newCreatures = [
       { name: "Vrestin", counters: vrestinCounters },
       ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectFinal }))
     ];
-
-    const totalInsectCounters = insectFinal * base;
-    const totalAdded = vrestinCounters + totalInsectCounters;
-    addToTracker(totalAdded);
 
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
@@ -95,23 +97,19 @@ export default function App() {
     const andurilBase = has("citys_blessing") ? 2 : 1;
     const andurilBonus = Math.ceil((andurilBase + getBaseCounterBonus()) * getMultiplier());
 
-    let totalCombatCounters = 0;
     const updatedCreatures = creatures.map((c) => {
       const name = c.name.toLowerCase();
       const isInsect = name.includes("insect") || name.includes("vrestin");
       let added = 0;
       if (isInsect) added += insectBonus;
       if (has("anduril")) added += andurilBonus;
-      totalCombatCounters += added;
+      addToTracker(added);
       return { ...c, counters: c.counters + added };
     });
 
+    log += `All insects get +${insectBonus}, all creatures get +${has("anduril") ? andurilBonus : 0} from Andúril.`;
     setCreatures(updatedCreatures);
-    setResultLog((prev) => [
-      `${log}All insects get +${insectBonus}, all creatures get +${has("anduril") ? andurilBonus : 0} from Andúril.`,
-      ...prev
-    ]);
-    addToTracker(totalCombatCounters);
+    setResultLog((prev) => [log, ...prev]);
   };
 
   const handleEndStep = () => {
