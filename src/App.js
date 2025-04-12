@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 const supportCards = [
@@ -74,20 +73,20 @@ export default function App() {
     if (has("hardened_scales")) insectBonus += 1;
     const insectFinal = Math.ceil(insectBonus * multiplier);
 
-    const totalETBCounters = vrestinCounters + (base * insectFinal);
-    let counterLog = totalETBCounters;
+    let log = `Vrestin enters with ${vrestinCounters} counters.\n`;
+    log += `${base} Insect tokens created. Each gets +${insectFinal} counters.`;
 
     const newCreatures = [
       { name: "Vrestin", counters: vrestinCounters },
       ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectFinal }))
     ];
 
-    let log = `Vrestin enters with ${vrestinCounters} counters.\n`;
-    log += `${base} Insect tokens created. Each gets +${insectFinal} counters.`;
+    const totalInsectCounters = insectFinal * base;
+    const totalAdded = vrestinCounters + totalInsectCounters;
+    addToTracker(totalAdded);
 
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
-    addToTracker(counterLog);
   };
 
   const handleCombat = () => {
