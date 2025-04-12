@@ -1,10 +1,54 @@
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
   margin: 0;
   padding: 0;
+  font-family: 'Merriweather', serif;
+  background: linear-gradient(to bottom right, #dcefcf, #b0dab9);
+  color: #2e4a2d;
 }
 
-#root {
-  padding: 20px;
+h1, h2 {
+  color: #245632;
+}
+
+input, button, textarea {
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+button:hover {
+  background-color: #3c8d40;
+}
+
+textarea {
+  resize: none;
+}
+
+.card-tile {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  border: 2px solid #ccc;
+  padding: 10px;
+  transition: all 0.2s ease;
+}
+
+.card-tile.selected {
+  border-color: #4caf50;
+  background-color: #e4f6e4;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+input[type=\"number\"] {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
 }
