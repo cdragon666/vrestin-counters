@@ -40,56 +40,67 @@ export default function App() {
 
   const has = (id) => selectedCards.includes(id);
 
-  function getFinalCounterAmount(base) {
+  function getBaseCounterBonus() {
     let bonus = 0;
-    let multiplier = 1;
-
     if (has("hardened_scales")) bonus += 1;
     if (has("conclave_mentor")) bonus += 1;
     if (has("ozolith")) bonus += 1;
+    return bonus;
+  }
 
+  function getMultiplier() {
+    let multiplier = 1;
     if (has("branching_evolution")) multiplier *= 2;
     if (has("kami")) multiplier *= 2;
     if (has("innkeeper")) multiplier *= 2;
-
-    const total = Math.ceil((base + bonus) * multiplier);
-    setCounterTracker((prev) => prev + total);
-    return total;
+    return multiplier;
   }
 
   const calculateETB = () => {
     const base = parseInt(vrestinX);
-    const vrestinFinal = getFinalCounterAmount(base);
-    const insectCounterBonus = getFinalCounterAmount(1);
+    const bonus = getBaseCounterBonus();
+    const multiplier = getMultiplier();
+
+    const vrestinFinal = Math.ceil((base + bonus) * multiplier);
+
+    let insectCounterBonus = 0;
+    if (has("unicorn")) insectCounterBonus += 1;
+    if (has("conclave_mentor")) insectCounterBonus += 1;
+    if (has("crawler")) insectCounterBonus += 1;
+    if (has("hardened_scales")) insectCounterBonus += 1;
+
+    const insectFinal = Math.ceil(insectCounterBonus * multiplier);
 
     let log = `Vrestin enters with ${vrestinFinal} counters.\n`;
-    log += `${base} Insect tokens created. Each gets +${insectCounterBonus} counters.\n`;
+    log += `${base} Insect tokens created. Each gets +${insectFinal} counters.\n`;
 
     const newCreatures = [
       { name: "Vrestin", counters: vrestinFinal },
-      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectCounterBonus }))
+      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectFinal }))
     ];
 
+    setCounterTracker((prev) => prev + vrestinFinal + insectFinal * base);
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
   };
 
   const handleCombat = () => {
     let log = `Combat Phase:\n`;
-    const insectBonus = getFinalCounterAmount(1);
-    const andurilBonus = has("citys_blessing") ? 2 : 1;
-    const allBonus = getFinalCounterAmount(andurilBonus);
+    const insectBonus = Math.ceil((1 + getBaseCounterBonus()) * getMultiplier());
+    const andurilBase = has("citys_blessing") ? 2 : 1;
+    const andurilBonus = Math.ceil((andurilBase + getBaseCounterBonus()) * getMultiplier());
 
     const updatedCreatures = creatures.map((c) => {
       const name = c.name.toLowerCase();
       const isInsect = name.includes("insect") || name.includes("vrestin");
       let added = 0;
       if (isInsect) added += insectBonus;
-      if (has("anduril")) added += allBonus;
+      if (has("anduril")) added += andurilBonus;
+      setCounterTracker((prev) => prev + added);
       return { ...c, counters: c.counters + added };
     });
 
-    log += `All insects get +${insectBonus}, all creatures get +${has("anduril") ? allBonus : 0} from Andúril.\n`;
+    log += `All insects get +${insectBonus}, all creatures get +${has("anduril") ? andurilBonus : 0} from Andúril.\n`;
     setCreatures(updatedCreatures);
     setResultLog((prev) => [log, ...prev]);
   };
@@ -121,9 +132,10 @@ export default function App() {
     const name = newCreatureName.trim();
     if (!name) return;
     const data = creatureData[name.toLowerCase()];
-    const counters = data ? data.counters : parseInt(startingCounters) || 0;
-    const final = getFinalCounterAmount(counters);
+    const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
+    const final = Math.ceil((baseCounters + getBaseCounterBonus()) * getMultiplier());
     setCreatures([...creatures, { name: newCreatureName, counters: final }]);
+    setCounterTracker((prev) => prev + final);
     setNewCreatureName("");
     setStartingCounters(0);
     setSuggestions([]);
@@ -252,3 +264,4 @@ export default function App() {
     </div>
   );
 }
+
