@@ -72,7 +72,6 @@ export default function App() {
     let bonus = 0;
     let multiplier = 1;
     let baseInsect = 1;
-    let allBonus = 0;
 
     if (has("branching_evolution")) multiplier *= 2;
     if (has("kami")) multiplier *= 2;
@@ -86,7 +85,8 @@ export default function App() {
     const allCounters = Math.ceil((andurilCount + bonus) * multiplier);
 
     const updatedCreatures = creatures.map((c) => {
-      const isInsect = c.name.toLowerCase().includes("insect");
+      const name = c.name.toLowerCase();
+      const isInsect = name.includes("insect") || name.includes("vrestin");
       let added = 0;
       if (isInsect) added += insectCounters;
       if (has("anduril")) added += allCounters;
