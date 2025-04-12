@@ -2,12 +2,14 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Merriweather', serif;
-  background: linear-gradient(to bottom right, #dcefcf, #b0dab9);
+  background: url('https://images.unsplash.com/photo-1549887534-3241c07f9df3?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
+  background-size: cover;
   color: #2e4a2d;
 }
 
 h1, h2 {
   color: #245632;
+  text-shadow: 1px 1px 2px #cde5d3;
 }
 
 input, button, textarea {
@@ -15,6 +17,7 @@ input, button, textarea {
   border: 1px solid #ccc;
   font-family: inherit;
   font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 button {
@@ -23,6 +26,7 @@ button {
   border: none;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 button:hover {
@@ -31,24 +35,49 @@ button:hover {
 
 textarea {
   resize: none;
+  background-color: rgba(255, 255, 255, 0.95);
 }
 
 .card-tile {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.85);
   border-radius: 10px;
   border: 2px solid #ccc;
   padding: 10px;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
 .card-tile.selected {
   border-color: #4caf50;
-  background-color: #e4f6e4;
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  background-color: #e7f4e4;
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
 }
 
-input[type=\"number\"] {
+input[type="number"] {
   width: 100%;
   padding: 0.5rem;
   margin-top: 0.5rem;
+  background-color: white;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #1f3a20;
+  text-shadow: 0 1px 1px #e3f0e6;
+}
+
+/* Scroll bar slight cleanup */
+textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background-color: #8bc34a;
+  border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background-color: #689f38;
 }
