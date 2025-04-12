@@ -1,22 +1,45 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Merriweather', serif;
-  background-color: #1d3520; /* Dark forest green */
-  color: #e6ffe6; /* Soft light green text */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #152d19; /* deeper, calmer forest green */
+  color: #f0fff0; /* light minty green text */
+  font-size: 1.1rem;
 }
 
 .card-tile {
-  padding: 0.5rem;
+  padding: 0.6rem;
   border-radius: 0.5rem;
   text-align: center;
-  border: 2px solid #ccc;
-  background-color: #2a4d31;
-  color: #fff;
+  border: 2px solid #cccccc33;
+  background-color: #244c2e;
+  color: #fafafa;
   cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.card-tile:hover {
+  background-color: #2e5e38;
+  transform: scale(1.02);
 }
 
 .card-tile.selected {
-  border-color: #4caf50;
-  background-color: #3e7c4e;
+  border-color: #c6ff80;
+  background-color: #3c7549;
+}
+
+button {
+  background-color: #3c7549;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background-color: #4e8e5c;
 }
