@@ -65,7 +65,6 @@ export default function App() {
     const bonus = getBaseCounterBonus();
     const multiplier = getMultiplier();
     const vrestinCounters = Math.ceil((base + bonus) * multiplier);
-    addToTracker(vrestinCounters);
 
     let insectBonus = 0;
     if (has("unicorn")) insectBonus += 1;
@@ -74,6 +73,9 @@ export default function App() {
     if (has("hardened_scales")) insectBonus += 1;
     const insectFinal = Math.ceil(insectBonus * multiplier);
 
+    const totalETBCounters = vrestinCounters + (base * insectFinal);
+    addToTracker(totalETBCounters);
+
     let log = `Vrestin enters with ${vrestinCounters} counters.\n`;
     log += `${base} Insect tokens created. Each gets +${insectFinal} counters.\n`;
 
@@ -81,10 +83,6 @@ export default function App() {
       { name: "Vrestin", counters: vrestinCounters },
       ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectFinal }))
     ];
-
-    // Track insect counters
-    const totalInsectCounters = base * insectFinal;
-    addToTracker(totalInsectCounters);
 
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
@@ -271,3 +269,4 @@ export default function App() {
     </div>
   );
 }
+
