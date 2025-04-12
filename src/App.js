@@ -1,17 +1,17 @@
 import { useState } from "react";
 
 const supportCards = [
-  { id: "hardened_scales", name: "Hardened Scales", bonus: 1 },
-  { id: "branching_evolution", name: "Branching Evolution", multiplier: 2 },
-  { id: "kami", name: "Kami of Whispered Hopes", multiplier: 2 },
-  { id: "innkeeper", name: "Innkeeper's Talent", multiplier: 2 },
-  { id: "ozolith", name: "Ozolith, the Shattered Spire", bonus: 1 },
-  { id: "conclave_mentor", name: "Conclave Mentor", bonus: 1 },
-  { id: "anduril", name: "Andúril Equipped", anduril: true },
-  { id: "citys_blessing", name: "City's Blessing (10+ permanents)", city: true },
-  { id: "unicorn", name: "Good-Fortune Unicorn (ETB trigger)", etbBonus: 1 },
-  { id: "crawler", name: "Duskshell Crawler (ETB trigger)", etbBonus: 1 },
-  { id: "hornbeetle", name: "Iridescent Hornbeetle (token maker)", makesTokens: true }
+  { id: "hardened_scales", name: "Hardened Scales" },
+  { id: "branching_evolution", name: "Branching Evolution" },
+  { id: "kami", name: "Kami of Whispered Hopes" },
+  { id: "innkeeper", name: "Innkeeper's Talent" },
+  { id: "ozolith", name: "Ozolith, the Shattered Spire" },
+  { id: "conclave_mentor", name: "Conclave Mentor" },
+  { id: "anduril", name: "Andúril Equipped" },
+  { id: "citys_blessing", name: "City's Blessing (10+ permanents)" },
+  { id: "unicorn", name: "Good-Fortune Unicorn (ETB trigger)" },
+  { id: "crawler", name: "Duskshell Crawler (ETB trigger)" },
+  { id: "hornbeetle", name: "Iridescent Hornbeetle (token maker)" }
 ];
 
 const creatureData = {
@@ -23,33 +23,6 @@ const creatureData = {
 };
 
 export default function App() {
-  const [mode, setMode] = useState("choose");
-
-  if (mode === "choose") {
-    return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <h1>Welcome to the +1/+1 Counter Calculator</h1>
-        <p>Choose your mode:</p>
-        <button onClick={() => setMode("vrestin")} style={{ margin: "1rem", padding: "1rem 2rem" }}>Use Vrestin Deck</button>
-        <button onClick={() => setMode("custom")} style={{ margin: "1rem", padding: "1rem 2rem" }}>Build Your Own Deck</button>
-      </div>
-    );
-  }
-
-  if (mode === "vrestin") {
-    return <VrestinMode />;
-  }
-
-  return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Custom Deck Mode (Coming Soon)</h1>
-      <p>Here, users will be able to add their own cards, creatures, and save decks.</p>
-      <button onClick={() => setMode("choose")} style={{ marginTop: "2rem" }}>⬅ Back</button>
-    </div>
-  );
-}
-
-function VrestinMode() {
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
   const [creatures, setCreatures] = useState([]);
@@ -57,6 +30,7 @@ function VrestinMode() {
   const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [counterTracker, setCounterTracker] = useState(0);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -66,26 +40,27 @@ function VrestinMode() {
 
   const has = (id) => selectedCards.includes(id);
 
-function getFinalCounterAmount(base) {
-  let bonus = 0;
-  let multiplier = 1;
+  function getFinalCounterAmount(base) {
+    let bonus = 0;
+    let multiplier = 1;
 
-  if (has("hardened_scales")) bonus += 1;
-  if (has("conclave_mentor")) bonus += 1;
-  if (has("ozolith")) bonus += 1;
+    if (has("hardened_scales")) bonus += 1;
+    if (has("conclave_mentor")) bonus += 1;
+    if (has("ozolith")) bonus += 1;
 
-  if (has("branching_evolution")) multiplier *= 2;
-  if (has("kami")) multiplier *= 2;
-  if (has("innkeeper")) multiplier *= 2;
+    if (has("branching_evolution")) multiplier *= 2;
+    if (has("kami")) multiplier *= 2;
+    if (has("innkeeper")) multiplier *= 2;
 
-  return Math.ceil((base + bonus) * multiplier);
-}
-
+    const total = Math.ceil((base + bonus) * multiplier);
+    setCounterTracker((prev) => prev + total);
+    return total;
+  }
 
   const calculateETB = () => {
     const base = parseInt(vrestinX);
     const vrestinFinal = getFinalCounterAmount(base);
-    const insectCounterBonus = getFinalCounterAmount(1, true);
+    const insectCounterBonus = getFinalCounterAmount(1);
 
     let log = `Vrestin enters with ${vrestinFinal} counters.\n`;
     log += `${base} Insect tokens created. Each gets +${insectCounterBonus} counters.\n`;
@@ -94,13 +69,6 @@ function getFinalCounterAmount(base) {
       { name: "Vrestin", counters: vrestinFinal },
       ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectCounterBonus }))
     ];
-
-    if (has("hornbeetle")) {
-      newCreatures.push(
-        ...Array(vrestinFinal).fill().map((_, i) => ({ name: `Beetle Token ${i + 1}`, counters: 0 }))
-      );
-      log += `Iridescent Hornbeetle created ${vrestinFinal} Beetle tokens.`;
-    }
 
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
@@ -126,6 +94,19 @@ function getFinalCounterAmount(base) {
     setResultLog((prev) => [log, ...prev]);
   };
 
+  const handleEndStep = () => {
+    let log = `End Step:\n`;
+    if (has("hornbeetle") && counterTracker > 0) {
+      const newTokens = Array(counterTracker).fill().map((_, i) => ({ name: `Beetle Token ${i + 1}`, counters: 0 }));
+      setCreatures((prev) => [...prev, ...newTokens]);
+      log += `Hornbeetle created ${counterTracker} Insect tokens from ${counterTracker} counters added this turn.`;
+    } else {
+      log += `No effects triggered.`;
+    }
+    setCounterTracker(0);
+    setResultLog((prev) => [log, ...prev]);
+  };
+
   const updateCounter = (index, delta) => {
     setCreatures((prev) =>
       prev.map((c, i) => (i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c))
@@ -141,7 +122,8 @@ function getFinalCounterAmount(base) {
     if (!name) return;
     const data = creatureData[name.toLowerCase()];
     const counters = data ? data.counters : parseInt(startingCounters) || 0;
-    setCreatures([...creatures, { name: newCreatureName, counters }]);
+    const final = getFinalCounterAmount(counters);
+    setCreatures([...creatures, { name: newCreatureName, counters: final }]);
     setNewCreatureName("");
     setStartingCounters(0);
     setSuggestions([]);
@@ -235,6 +217,11 @@ function getFinalCounterAmount(base) {
       <h2 style={{ marginTop: "2rem" }}>Combat Phase</h2>
       <button onClick={handleCombat} style={{ width: "100%" }}>
         Attack with Insects
+      </button>
+
+      <h2 style={{ marginTop: "2rem" }}>End Step</h2>
+      <button onClick={handleEndStep} style={{ width: "100%" }}>
+        Go to End Step (Hornbeetle Trigger)
       </button>
 
       <h2 style={{ marginTop: "2rem" }}>Creatures</h2>
