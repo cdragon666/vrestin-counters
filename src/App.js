@@ -66,21 +66,21 @@ function VrestinMode() {
 
   const has = (id) => selectedCards.includes(id);
 
-  function getFinalCounterAmount(base, isTrigger = false) {
-    let bonus = 0;
-    let multiplier = 1;
+function getFinalCounterAmount(base) {
+  let bonus = 0;
+  let multiplier = 1;
 
-    if (has("hardened_scales")) bonus += 1;
-    if (has("conclave_mentor")) bonus += 1;
-    if (has("ozolith")) bonus += 1;
+  if (has("hardened_scales")) bonus += 1;
+  if (has("conclave_mentor")) bonus += 1;
+  if (has("ozolith")) bonus += 1;
 
-    if (has("branching_evolution")) multiplier *= 2;
-    if (has("kami")) multiplier *= 2;
+  if (has("branching_evolution")) multiplier *= 2;
+  if (has("kami")) multiplier *= 2;
+  if (has("innkeeper")) multiplier *= 2;
 
-    if (isTrigger && has("innkeeper")) multiplier *= 2;
+  return Math.ceil((base + bonus) * multiplier);
+}
 
-    return Math.ceil((base + bonus) * multiplier);
-  }
 
   const calculateETB = () => {
     const base = parseInt(vrestinX);
