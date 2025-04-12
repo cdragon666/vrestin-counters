@@ -23,6 +23,12 @@ export default function App() {
 
   const has = (id) => selectedCards.includes(id);
 
+  const toggleCard = (id) => {
+    setSelectedCards((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+    );
+  };
+
   const getBaseBonus = () => {
     let bonus = 0;
     if (has("hardened_scales")) bonus += 1;
@@ -53,7 +59,6 @@ export default function App() {
     if (has("unicorn")) insectFlat += 1;
     if (has("crawler")) insectFlat += 1;
 
-    // ETB buffs always get at least +1 if Unicorn or Crawler is selected
     const insectBonus = Math.ceil((insectFlat + getBaseBonus()) * multiplier);
     const newInsects = Array(base).fill().map((_, i) => ({
       name: `Insect ${i + 1}`,
@@ -133,7 +138,6 @@ export default function App() {
         {supportCards.map((card) => (
           <div
             key={card.id}
-            className={`card-tile ${selectedCards.includes(card.id) ? "selected" : ""}`}
             onClick={() => toggleCard(card.id)}
             style={{
               cursor: "pointer",
