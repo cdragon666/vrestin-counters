@@ -219,11 +219,11 @@ export default function App() {
       </button>
 
       {suggestions.length > 0 && (
-        <ul style={{ listStyle: "none", padding: 0, marginTop: "0.5rem", background: "#eee", borderRadius: "0.5rem" }}>
+        <ul style={{ listStyle: "none", padding: 0, marginTop: "0.5rem", background: "#111", border: "1px solid #888", borderRadius: "6px", fontWeight: "bold", fontSize: "1rem", color: "#fff" }}>
           {suggestions.map((s, i) => (
             <li
               key={i}
-              style={{ padding: "0.3rem", cursor: "pointer" }}
+              style={{ padding: "0.5rem 0.7rem", cursor: "pointer", borderBottom: "1px solid #333" }}
               onClick={() => fillSuggestion(s)}
             >
               {s.replace(/\b\w/g, (c) => c.toUpperCase())}
