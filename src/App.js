@@ -73,7 +73,6 @@ export default function App() {
     if (has("crawler")) insectBonus += 1;
     if (has("hardened_scales")) insectBonus += 1;
     const insectFinal = Math.ceil(insectBonus * multiplier);
-    addToTracker(insectFinal * base);
 
     let log = `Vrestin enters with ${vrestinCounters} counters.\n`;
     log += `${base} Insect tokens created. Each gets +${insectFinal} counters.\n`;
@@ -82,6 +81,10 @@ export default function App() {
       { name: "Vrestin", counters: vrestinCounters },
       ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectFinal }))
     ];
+
+    // Track insect counters
+    const totalInsectCounters = base * insectFinal;
+    addToTracker(totalInsectCounters);
 
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
