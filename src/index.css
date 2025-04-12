@@ -56,3 +56,20 @@ input[type="number"] {
   border: 1px solid #aaa;
   border-radius: 5px;
 }
+ul {
+  background-color: #2a2f2d;
+  border: 1px solid #555;
+  color: #e8fce8;
+  margin-top: 0.3rem;
+  border-radius: 5px;
+  padding: 0.3rem;
+}
+
+li {
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+
+li:hover {
+  background-color: #3a403d;
+}
