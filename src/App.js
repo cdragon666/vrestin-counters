@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 const supportCards = [
@@ -104,6 +105,10 @@ export default function App() {
     );
   };
 
+  const removeCreature = (index) => {
+    setCreatures((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const addCreature = () => {
     if (newCreatureName.trim() !== "") {
       setCreatures([...creatures, { name: newCreatureName, counters: 0 }]);
@@ -165,6 +170,7 @@ export default function App() {
           <div>
             <button onClick={() => updateCounter(i, 1)}>+1</button>
             <button onClick={() => updateCounter(i, -1)} style={{ marginLeft: "0.5rem" }}>-1</button>
+            <button onClick={() => removeCreature(i)} style={{ marginLeft: "0.5rem", color: "red" }}>🗑️</button>
           </div>
         </div>
       ))}
