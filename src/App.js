@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 const supportCards = [
@@ -15,12 +14,22 @@ const supportCards = [
   { id: "hornbeetle", name: "Iridescent Hornbeetle (token maker)", makesTokens: true }
 ];
 
+const creatureData = {
+  "scute mob": { counters: 1 },
+  "hornet queen": { counters: 2 },
+  "sigarda, font of blessings": { counters: 4 },
+  "king darien xlviii": { counters: 3 },
+  "springheart nantuko": { counters: 2 }
+};
+
 export default function App() {
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
   const [creatures, setCreatures] = useState([]);
   const [newCreatureName, setNewCreatureName] = useState("");
+  const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -110,10 +119,35 @@ export default function App() {
   };
 
   const addCreature = () => {
-    if (newCreatureName.trim() !== "") {
-      setCreatures([...creatures, { name: newCreatureName, counters: 0 }]);
-      setNewCreatureName("");
+    const name = newCreatureName.trim();
+    if (!name) return;
+    const data = creatureData[name.toLowerCase()];
+    const counters = data ? data.counters : parseInt(startingCounters) || 0;
+    setCreatures([...creatures, { name: newCreatureName, counters }]);
+    setNewCreatureName("");
+    setStartingCounters(0);
+    setSuggestions([]);
+  };
+
+  const handleNameChange = (e) => {
+    const input = e.target.value;
+    setNewCreatureName(input);
+    if (!input) {
+      setSuggestions([]);
+      return;
     }
+    const matches = Object.keys(creatureData).filter((name) =>
+      name.includes(input.toLowerCase())
+    );
+    setSuggestions(matches);
+  };
+
+  const fillSuggestion = (name) => {
+    const displayName = name.replace(/\b\w/g, (c) => c.toUpperCase());
+    setNewCreatureName(displayName);
+    const data = creatureData[name];
+    if (data) setStartingCounters(data.counters);
+    setSuggestions([]);
   };
 
   const clearLog = () => setResultLog([]);
@@ -152,11 +186,33 @@ export default function App() {
         type="text"
         placeholder="Creature Name"
         value={newCreatureName}
-        onChange={(e) => setNewCreatureName(e.target.value)}
+        onChange={handleNameChange}
+        style={{ width: "60%", marginRight: "1%" }}
+      />
+      <input
+        type="number"
+        placeholder="+1/+1 Counters"
+        value={startingCounters}
+        onChange={(e) => setStartingCounters(e.target.value)}
+        style={{ width: "35%" }}
       />
       <button onClick={addCreature} style={{ marginTop: "0.5rem", width: "100%" }}>
         Add Creature
       </button>
+
+      {suggestions.length > 0 && (
+        <ul style={{ listStyle: "none", padding: 0, marginTop: "0.5rem", background: "#eee", borderRadius: "0.5rem" }}>
+          {suggestions.map((s, i) => (
+            <li
+              key={i}
+              style={{ padding: "0.3rem", cursor: "pointer" }}
+              onClick={() => fillSuggestion(s)}
+            >
+              {s.replace(/\b\w/g, (c) => c.toUpperCase())}
+            </li>
+          ))}
+        </ul>
+      )}
 
       <h2 style={{ marginTop: "2rem" }}>Combat Phase</h2>
       <button onClick={handleCombat} style={{ width: "100%" }}>
