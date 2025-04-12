@@ -66,30 +66,33 @@ function VrestinMode() {
 
   const has = (id) => selectedCards.includes(id);
 
-  const calculateETB = () => {
-    let base = parseInt(vrestinX);
-    let tokens = base;
-    let counterBonus = 0;
+  function getFinalCounterAmount(base, isTrigger = false) {
+    let bonus = 0;
     let multiplier = 1;
 
-    supportCards.forEach((card) => {
-      if (has(card.id)) {
-        if (card.bonus) counterBonus += card.bonus;
-        if (card.multiplier) multiplier *= card.multiplier;
-        if (card.etbBonus) counterBonus += card.etbBonus;
-      }
-    });
+    if (has("hardened_scales")) bonus += 1;
+    if (has("conclave_mentor")) bonus += 1;
+    if (has("ozolith")) bonus += 1;
 
-    const vrestinFinal = Math.ceil((base + counterBonus) * multiplier);
-    const finalInsectCount = tokens;
-    const insectCounterBonus = Math.ceil((1 + (has("conclave_mentor") ? 1 : 0) + (has("unicorn") ? 1 : 0) + (has("hardened_scales") ? 1 : 0)) * multiplier);
+    if (has("branching_evolution")) multiplier *= 2;
+    if (has("kami")) multiplier *= 2;
+
+    if (isTrigger && has("innkeeper")) multiplier *= 2;
+
+    return Math.ceil((base + bonus) * multiplier);
+  }
+
+  const calculateETB = () => {
+    const base = parseInt(vrestinX);
+    const vrestinFinal = getFinalCounterAmount(base);
+    const insectCounterBonus = getFinalCounterAmount(1, true);
 
     let log = `Vrestin enters with ${vrestinFinal} counters.\n`;
-    log += `${finalInsectCount} Insect tokens created. Each gets +${insectCounterBonus} counters.\n`;
+    log += `${base} Insect tokens created. Each gets +${insectCounterBonus} counters.\n`;
 
     const newCreatures = [
       { name: "Vrestin", counters: vrestinFinal },
-      ...Array(finalInsectCount).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectCounterBonus }))
+      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectCounterBonus }))
     ];
 
     if (has("hornbeetle")) {
@@ -105,32 +108,20 @@ function VrestinMode() {
 
   const handleCombat = () => {
     let log = `Combat Phase:\n`;
-    let bonus = 0;
-    let multiplier = 1;
-    let baseInsect = 1;
-
-    if (has("branching_evolution")) multiplier *= 2;
-    if (has("kami")) multiplier *= 2;
-    if (has("innkeeper")) multiplier *= 2;
-    if (has("conclave_mentor")) bonus += 1;
-    if (has("hardened_scales")) bonus += 1;
-    if (has("ozolith")) bonus += 1;
-
-    const insectCounters = Math.ceil((baseInsect + bonus) * multiplier);
-    const andurilCount = has("citys_blessing") ? 2 : 1;
-    const allCounters = Math.ceil((andurilCount + bonus) * multiplier);
+    const insectBonus = getFinalCounterAmount(1);
+    const andurilBonus = has("citys_blessing") ? 2 : 1;
+    const allBonus = getFinalCounterAmount(andurilBonus);
 
     const updatedCreatures = creatures.map((c) => {
       const name = c.name.toLowerCase();
       const isInsect = name.includes("insect") || name.includes("vrestin");
       let added = 0;
-      if (isInsect) added += insectCounters;
-      if (has("anduril")) added += allCounters;
-      if (!isInsect && has("anduril")) added = allCounters;
+      if (isInsect) added += insectBonus;
+      if (has("anduril")) added += allBonus;
       return { ...c, counters: c.counters + added };
     });
 
-    log += `All insects get +${insectCounters}, all creatures get +${has("anduril") ? allCounters : 0} from Andúril.\n`;
+    log += `All insects get +${insectBonus}, all creatures get +${has("anduril") ? allBonus : 0} from Andúril.\n`;
     setCreatures(updatedCreatures);
     setResultLog((prev) => [log, ...prev]);
   };
