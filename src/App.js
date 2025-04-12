@@ -14,14 +14,23 @@ const supportCards = [
   { id: "hornbeetle", name: "Iridescent Hornbeetle (token maker)" }
 ];
 
+const creatureData = {
+  "scute mob": { counters: 1 },
+  "hornet queen": { counters: 2 },
+  "sigarda, font of blessings": { counters: 4 },
+  "king darien xlviii": { counters: 3 },
+  "springheart nantuko": { counters: 2 }
+};
+
 export default function App() {
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
   const [creatures, setCreatures] = useState([]);
+  const [newCreatureName, setNewCreatureName] = useState("");
+  const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
   const [counterTracker, setCounterTracker] = useState(0);
-
-  const has = (id) => selectedCards.includes(id);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -29,86 +38,84 @@ export default function App() {
     );
   };
 
-  const getBaseBonus = () => {
+  const has = (id) => selectedCards.includes(id);
+
+  function getBaseCounterBonus() {
     let bonus = 0;
     if (has("hardened_scales")) bonus += 1;
     if (has("conclave_mentor")) bonus += 1;
     if (has("ozolith")) bonus += 1;
     return bonus;
-  };
+  }
 
-  const getMultiplier = () => {
+  function getMultiplier() {
     let multiplier = 1;
     if (has("branching_evolution")) multiplier *= 2;
     if (has("kami")) multiplier *= 2;
     if (has("innkeeper")) multiplier *= 2;
     return multiplier;
-  };
+  }
 
-  const addToTracker = (amount) => {
+  function getEntryCounterBonus() {
+    let base = 0;
+    if (has("unicorn")) base += 1;
+    if (has("crawler")) base += 1;
+    base += getBaseCounterBonus();
+    return Math.ceil(base * getMultiplier());
+  }
+
+  function addToTracker(amount) {
     setCounterTracker((prev) => prev + amount);
-  };
+  }
 
   const calculateETB = () => {
     const base = parseInt(vrestinX);
-    const bonus = getBaseBonus();
-    const multiplier = getMultiplier();
-    const vrestinFinal = Math.ceil((base + bonus) * multiplier);
-    let insectFlat = 0;
+    const vrestinCounters = Math.ceil((base + getBaseCounterBonus()) * getMultiplier());
+    const insectCounters = getEntryCounterBonus();
 
-    if (has("unicorn")) insectFlat += 1;
-    if (has("crawler")) insectFlat += 1;
+    addToTracker(vrestinCounters + base * insectCounters);
 
-    const insectBonus = Math.ceil((insectFlat + getBaseBonus()) * multiplier);
-    const newInsects = Array(base).fill().map((_, i) => ({
-      name: `Insect ${i + 1}`,
-      counters: insectBonus
-    }));
+    let log = `Vrestin enters with ${vrestinCounters} counters.\n`;
+    log += `${base} Insect tokens created. Each gets +${insectCounters} counters.\n`;
 
-    const allCreatures = [
-      { name: "Vrestin", counters: vrestinFinal },
-      ...newInsects
+    const newCreatures = [
+      { name: "Vrestin", counters: vrestinCounters },
+      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectCounters }))
     ];
 
-    const totalCounters = vrestinFinal + (newInsects.length * insectBonus);
-    addToTracker(totalCounters);
-
-    let log = `Vrestin enters with ${vrestinFinal} counters.\n`;
-    log += `${base} Insect tokens created. Each gets +${insectBonus} counters.`;
-
-    setCreatures((prev) => [...prev, ...allCreatures]);
+    setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
   };
 
   const handleCombat = () => {
-    const insectBuff = Math.ceil((1 + getBaseBonus()) * getMultiplier());
-    const andurilBase = has("citys_blessing") ? 2 : 1;
-    const andurilBuff = has("anduril") ? Math.ceil((andurilBase + getBaseBonus()) * getMultiplier()) : 0;
-
     let log = `Combat Phase:\n`;
+    const insectBonus = Math.ceil((1 + getBaseCounterBonus()) * getMultiplier());
+    const andurilBase = has("citys_blessing") ? 2 : 1;
+    const andurilBonus = Math.ceil((andurilBase + getBaseCounterBonus()) * getMultiplier());
 
-    const updated = creatures.map((c) => {
+    const updatedCreatures = creatures.map((c) => {
       const name = c.name.toLowerCase();
       const isInsect = name.includes("insect") || name.includes("vrestin");
-      const add = (isInsect ? insectBuff : 0) + andurilBuff;
-      if (add > 0) addToTracker(add);
-      return { ...c, counters: c.counters + add };
+      let added = 0;
+      if (isInsect) added += insectBonus;
+      if (has("anduril")) added += andurilBonus;
+      addToTracker(added);
+      return { ...c, counters: c.counters + added };
     });
 
-    log += `All insects get +${insectBuff}, all creatures get +${andurilBuff} from Andúril.`;
-    setCreatures(updated);
+    log += `All insects get +${insectBonus}, all creatures get +${has("anduril") ? andurilBonus : 0} from Andúril.`;
+    setCreatures(updatedCreatures);
     setResultLog((prev) => [log, ...prev]);
   };
 
   const handleEndStep = () => {
-    let log = "End Step:\n";
+    let log = `End Step:\n`;
     if (has("hornbeetle") && counterTracker > 0) {
-      const tokens = Array(counterTracker).fill().map((_, i) => ({
-        name: `Beetle Token ${i + 1}`,
-        counters: 0
-      }));
-      setCreatures((prev) => [...prev, ...tokens]);
+      const beetleBonus = getEntryCounterBonus();
+      const newTokens = Array(counterTracker).fill().map((_, i) => ({ name: `Beetle Token ${i + 1}`, counters: beetleBonus }));
+      setCreatures((prev) => [...prev, ...newTokens]);
       log += `Hornbeetle created ${counterTracker} Insect tokens from ${counterTracker} counters added this turn.`;
+      addToTracker(counterTracker * beetleBonus);
     } else {
       log += `No effects triggered.`;
     }
@@ -119,12 +126,46 @@ export default function App() {
   const updateCounter = (index, delta) => {
     if (delta > 0) addToTracker(delta);
     setCreatures((prev) =>
-      prev.map((c, i) => i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c)
+      prev.map((c, i) => (i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c))
     );
   };
 
   const removeCreature = (index) => {
     setCreatures((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addCreature = () => {
+    const name = newCreatureName.trim();
+    if (!name) return;
+    const data = creatureData[name.toLowerCase()];
+    const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
+    const final = Math.ceil((baseCounters + getBaseCounterBonus()) * getMultiplier());
+    addToTracker(final);
+    setCreatures([...creatures, { name: newCreatureName, counters: final }]);
+    setNewCreatureName("");
+    setStartingCounters(0);
+    setSuggestions([]);
+  };
+
+  const handleNameChange = (e) => {
+    const input = e.target.value;
+    setNewCreatureName(input);
+    if (!input) {
+      setSuggestions([]);
+      return;
+    }
+    const matches = Object.keys(creatureData).filter((name) =>
+      name.includes(input.toLowerCase())
+    );
+    setSuggestions(matches);
+  };
+
+  const fillSuggestion = (name) => {
+    const displayName = name.replace(/\b\w/g, (c) => c.toUpperCase());
+    setNewCreatureName(displayName);
+    const data = creatureData[name];
+    if (data) setStartingCounters(data.counters);
+    setSuggestions([]);
   };
 
   const clearLog = () => setResultLog([]);
@@ -138,16 +179,8 @@ export default function App() {
         {supportCards.map((card) => (
           <div
             key={card.id}
+            className={`card-tile ${selectedCards.includes(card.id) ? "selected" : ""}`}
             onClick={() => toggleCard(card.id)}
-            style={{
-              cursor: "pointer",
-              padding: "0.5rem",
-              background: selectedCards.includes(card.id) ? "#bdf5bd" : "#f0f0f0",
-              border: "2px solid",
-              borderColor: selectedCards.includes(card.id) ? "green" : "#ccc",
-              borderRadius: "0.5rem",
-              textAlign: "center"
-            }}
           >
             {card.name}
           </div>
@@ -161,11 +194,43 @@ export default function App() {
         id="vrestinX"
         value={vrestinX}
         onChange={(e) => setVrestinX(e.target.value)}
-        style={{ width: "100%", marginTop: "0.5rem", padding: "0.5rem" }}
       />
       <button onClick={calculateETB} style={{ marginTop: "0.5rem", width: "100%" }}>
         Summon Vrestin
       </button>
+
+      <h2 style={{ marginTop: "2rem" }}>Add Creature</h2>
+      <input
+        type="text"
+        placeholder="Creature Name"
+        value={newCreatureName}
+        onChange={handleNameChange}
+        style={{ width: "60%", marginRight: "1%" }}
+      />
+      <input
+        type="number"
+        placeholder="+1/+1 Counters"
+        value={startingCounters}
+        onChange={(e) => setStartingCounters(e.target.value)}
+        style={{ width: "35%" }}
+      />
+      <button onClick={addCreature} style={{ marginTop: "0.5rem", width: "100%" }}>
+        Add Creature
+      </button>
+
+      {suggestions.length > 0 && (
+        <ul style={{ listStyle: "none", padding: 0, marginTop: "0.5rem", background: "#eee", borderRadius: "0.5rem" }}>
+          {suggestions.map((s, i) => (
+            <li
+              key={i}
+              style={{ padding: "0.3rem", cursor: "pointer" }}
+              onClick={() => fillSuggestion(s)}
+            >
+              {s.replace(/\b\w/g, (c) => c.toUpperCase())}
+            </li>
+          ))}
+        </ul>
+      )}
 
       <h2 style={{ marginTop: "2rem" }}>Combat Phase</h2>
       <button onClick={handleCombat} style={{ width: "100%" }}>
