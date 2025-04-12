@@ -56,12 +56,17 @@ export default function App() {
     return multiplier;
   }
 
+  function trackCounters(added) {
+    setCounterTracker((prev) => prev + added);
+    return added;
+  }
+
   const calculateETB = () => {
     const base = parseInt(vrestinX);
     const bonus = getBaseCounterBonus();
     const multiplier = getMultiplier();
 
-    const vrestinFinal = Math.ceil((base + bonus) * multiplier);
+    const vrestinFinal = trackCounters(Math.ceil((base + bonus) * multiplier));
 
     let insectCounterBonus = 0;
     if (has("unicorn")) insectCounterBonus += 1;
@@ -69,17 +74,16 @@ export default function App() {
     if (has("crawler")) insectCounterBonus += 1;
     if (has("hardened_scales")) insectCounterBonus += 1;
 
-    const insectFinal = Math.ceil(insectCounterBonus * multiplier);
+    const insectFinal = trackCounters(Math.ceil(insectCounterBonus * multiplier)) * base;
 
     let log = `Vrestin enters with ${vrestinFinal} counters.\n`;
-    log += `${base} Insect tokens created. Each gets +${insectFinal} counters.\n`;
+    log += `${base} Insect tokens created. Each gets +${insectFinal / base || 0} counters.\n`;
 
     const newCreatures = [
       { name: "Vrestin", counters: vrestinFinal },
-      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectFinal }))
+      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectFinal / base || 0 }))
     ];
 
-    setCounterTracker((prev) => prev + vrestinFinal + insectFinal * base);
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
   };
@@ -96,7 +100,7 @@ export default function App() {
       let added = 0;
       if (isInsect) added += insectBonus;
       if (has("anduril")) added += andurilBonus;
-      setCounterTracker((prev) => prev + added);
+      trackCounters(added);
       return { ...c, counters: c.counters + added };
     });
 
@@ -120,7 +124,14 @@ export default function App() {
 
   const updateCounter = (index, delta) => {
     setCreatures((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c))
+      prev.map((c, i) => {
+        if (i === index) {
+          const added = Math.max(0, c.counters + delta) - c.counters;
+          if (added > 0) trackCounters(added);
+          return { ...c, counters: Math.max(0, c.counters + delta) };
+        }
+        return c;
+      })
     );
   };
 
@@ -135,7 +146,7 @@ export default function App() {
     const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
     const final = Math.ceil((baseCounters + getBaseCounterBonus()) * getMultiplier());
     setCreatures([...creatures, { name: newCreatureName, counters: final }]);
-    setCounterTracker((prev) => prev + final);
+    trackCounters(final);
     setNewCreatureName("");
     setStartingCounters(0);
     setSuggestions([]);
@@ -264,4 +275,3 @@ export default function App() {
     </div>
   );
 }
-
