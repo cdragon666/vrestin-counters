@@ -23,6 +23,33 @@ const creatureData = {
 };
 
 export default function App() {
+  const [mode, setMode] = useState("choose");
+
+  if (mode === "choose") {
+    return (
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        <h1>Welcome to the +1/+1 Counter Calculator</h1>
+        <p>Choose your mode:</p>
+        <button onClick={() => setMode("vrestin")} style={{ margin: "1rem", padding: "1rem 2rem" }}>Use Vrestin Deck</button>
+        <button onClick={() => setMode("custom")} style={{ margin: "1rem", padding: "1rem 2rem" }}>Build Your Own Deck</button>
+      </div>
+    );
+  }
+
+  if (mode === "vrestin") {
+    return <VrestinMode />;
+  }
+
+  return (
+    <div style={{ padding: "2rem" }}>
+      <h1>Custom Deck Mode (Coming Soon)</h1>
+      <p>Here, users will be able to add their own cards, creatures, and save decks.</p>
+      <button onClick={() => setMode("choose")} style={{ marginTop: "2rem" }}>⬅ Back</button>
+    </div>
+  );
+}
+
+function VrestinMode() {
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
   const [creatures, setCreatures] = useState([]);
