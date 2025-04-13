@@ -201,6 +201,23 @@ export default function App() {
       <button onClick={handleEndStep} style={{ width: "100%", marginTop: "0.5rem" }}>
         Go to End Step (Hornbeetle Trigger)
       </button>
+{creatures.length > 0 && (
+  <button
+    onClick={() => setCreatures([])}
+    style={{
+      background: "#a33",
+      color: "white",
+      padding: "0.5rem",
+      margin: "1rem 0",
+      border: "none",
+      borderRadius: "6px",
+      fontWeight: "bold",
+      width: "100%"
+    }}
+  >
+    🗑️ Delete All Creatures
+  </button>
+)}
 
       <h2 style={{ marginTop: "2rem" }}>Creatures</h2>
       <button onClick={clearCreatures} style={{ width: "100%", background: "#440", color: "#fff" }}>Clear All Creatures</button>
