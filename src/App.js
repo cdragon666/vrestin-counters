@@ -79,12 +79,14 @@ export default function App() {
   }
 
   return (
-    <div style={{ padding: "2rem" }}>
+    <div style={{ padding: "2rem", maxWidth: "700px", margin: "auto" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
       <button onClick={() => setMode("helper")} style={{ marginBottom: "1rem" }}>
         🧠 Switch to MTG Mechanics Master
       </button>
-      <p>This is your Vrestin tracker (simplified for this patch). Ready to add full features back.</p>
+
+      <p>Welcome back! The full Vrestin calculator will be restored here next.</p>
+      {/* The full feature set for Vrestin calculator will be re-implemented in this block. */}
     </div>
   );
 }
