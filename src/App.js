@@ -14,14 +14,6 @@ const supportCards = [
   { id: "hornbeetle", name: "Iridescent Hornbeetle (token maker)" }
 ];
 
-const creatureData = {
-  "scute mob": { counters: 1 },
-  "hornet queen": { counters: 2 },
-  "sigarda, font of blessings": { counters: 4 },
-  "king darien xlviii": { counters: 3 },
-  "springheart nantuko": { counters: 2 }
-};
-
 export default function App() {
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
@@ -31,6 +23,14 @@ export default function App() {
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [counterTracker, setCounterTracker] = useState(0);
+  const [decklistInput, setDecklistInput] = useState("");
+  const [creatureData, setCreatureData] = useState({
+    "scute mob": { counters: 1 },
+    "hornet queen": { counters: 0 },
+    "sigarda, font of blessings": { counters: 0 },
+    "king darien xlviii": { counters: 0 },
+    "springheart nantuko": { counters: 0 }
+  });
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -75,8 +75,8 @@ export default function App() {
 
     addToTracker(vrestinCounters + base * insectCounters);
 
-    let log = `Vrestin enters with ${vrestinCounters} counters.\n`;
-    log += `${base} Insect tokens created. Each gets +${insectCounters} counters.\n`;
+    let log = `-- ETB Phase --\nVrestin enters with ${vrestinCounters} counters (Base ${base}, Bonus ${getBaseCounterBonus()}, x${getMultiplier()}).\n`;
+    log += `${base} Insect tokens created. Each gets +${insectCounters} counters (Unicorn/Crawler + Bonus x${getMultiplier()}).\n`;
 
     const newCreatures = [
       { name: "Vrestin", counters: vrestinCounters },
@@ -88,7 +88,7 @@ export default function App() {
   };
 
   const handleCombat = () => {
-    let log = `Combat Phase:\n`;
+    let log = `-- Combat Phase --\n`;
     const insectBonus = Math.ceil((1 + getBaseCounterBonus()) * getMultiplier());
     const andurilBase = has("citys_blessing") ? 2 : 1;
     const andurilBonus = Math.ceil((andurilBase + getBaseCounterBonus()) * getMultiplier());
@@ -103,18 +103,21 @@ export default function App() {
       return { ...c, counters: c.counters + added };
     });
 
-    log += `All insects get +${insectBonus}, all creatures get +${has("anduril") ? andurilBonus : 0} from Andúril.`;
+    log += `Insects get +${insectBonus} (Mentor, Scales, etc.), `;
+    if (has("anduril")) log += `all creatures get +${andurilBonus} from Andúril.`;
+    else log += `no Andúril bonus.`;
+
     setCreatures(updatedCreatures);
     setResultLog((prev) => [log, ...prev]);
   };
 
   const handleEndStep = () => {
-    let log = `End Step:\n`;
+    let log = `-- End Step --\n`;
     if (has("hornbeetle") && counterTracker > 0) {
       const beetleBonus = getEntryCounterBonus();
       const newTokens = Array(counterTracker).fill().map((_, i) => ({ name: `Beetle Token ${i + 1}`, counters: beetleBonus }));
       setCreatures((prev) => [...prev, ...newTokens]);
-      log += `Hornbeetle created ${counterTracker} Insect tokens from ${counterTracker} counters added this turn.`;
+      log += `Hornbeetle created ${counterTracker} Insect tokens from ${counterTracker} counters this turn.`;
       addToTracker(counterTracker * beetleBonus);
     } else {
       log += `No effects triggered.`;
@@ -134,7 +137,7 @@ export default function App() {
     setCreatures((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const clearAllCreatures = () => {
+  const clearCreatures = () => {
     setCreatures([]);
   };
 
@@ -174,9 +177,36 @@ export default function App() {
 
   const clearLog = () => setResultLog([]);
 
+  const importDecklist = () => {
+    const lines = decklistInput.toLowerCase().split("\n");
+    const newCreatures = {};
+    lines.forEach((line) => {
+      const match = line.match(/[a-z ]+/i);
+      if (match) {
+        const name = match[0].trim();
+        if (name && !(name in creatureData)) {
+          newCreatures[name] = { counters: 0 };
+        }
+      }
+    });
+    setCreatureData((prev) => ({ ...prev, ...newCreatures }));
+    setDecklistInput("");
+    alert("Decklist imported: " + Object.keys(newCreatures).length + " creatures added.");
+  };
+
   return (
     <div style={{ padding: "2rem", maxWidth: "700px", margin: "auto" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
+
+      <h2>Import Decklist</h2>
+      <textarea
+        value={decklistInput}
+        onChange={(e) => setDecklistInput(e.target.value)}
+        rows={5}
+        placeholder="Paste decklist here..."
+        style={{ width: "100%", marginBottom: "0.5rem" }}
+      />
+      <button onClick={importDecklist} style={{ width: "100%" }}>Import Decklist</button>
 
       <h2>Select Active Cards</h2>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
@@ -247,12 +277,10 @@ export default function App() {
       </button>
 
       <h2 style={{ marginTop: "2rem" }}>Creatures</h2>
-      <button
-        onClick={clearAllCreatures}
-        style={{ width: "100%", marginBottom: "1rem", backgroundColor: "#7a1f1f", color: "#fff" }}
-      >
-        🗑️ Delete All Creatures
+      <button onClick={clearCreatures} style={{ marginBottom: "1rem", width: "100%", background: "darkred", color: "white" }}>
+        🗑️ Remove All Creatures
       </button>
+
       {creatures.map((c, i) => (
         <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
           <span>{c.name}: +{c.counters}/+{c.counters}</span>
