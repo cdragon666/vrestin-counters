@@ -78,7 +78,7 @@ export default function App() {
 
     addToTracker(vrestinCounters + base * insectCounters);
 
-    let log = `[ETB Phase]\n✨ Vrestin enters with ${vrestinCounters} counters\n🐞 ${base} Insect tokens created (+${insectCounters})`;
+    let log = `Vrestin enters with ${vrestinCounters} counters\n${base} Insect tokens created with ${insectCounters} counters each`;
 
     const newCreatures = [
       { name: "Vrestin", counters: vrestinCounters, power: 0, toughness: 0 },
@@ -90,7 +90,7 @@ export default function App() {
   };
 
   const handleCombat = () => {
-    let log = `[Combat Phase]\n`;
+    let log = ``;
     const insectBonus = Math.ceil((1 + getBaseCounterBonus()) * getMultiplier());
     const andurilBase = has("citys_blessing") ? 2 : 1;
     const andurilBonus = Math.ceil((andurilBase + getBaseCounterBonus()) * getMultiplier());
@@ -106,15 +106,15 @@ export default function App() {
     });
 
     log += has("anduril")
-      ? `🌟 All insects +${insectBonus}, all creatures +${andurilBonus} from Andúril`
-      : `🌟 All insects +${insectBonus}`;
+      ? `Insects gain +${insectBonus}, all creatures gain +${andurilBonus} from Andúril.`
+      : `Insects gain +${insectBonus}.`;
 
     setCreatures(updatedCreatures);
     setResultLog((prev) => [log, ...prev]);
   };
 
   const handleEndStep = () => {
-    let log = `[End Step]\n`;
+    let log = ``;
     if (has("hornbeetle") && counterTracker > 0) {
       const beetleBonus = getEntryCounterBonus();
       const newTokens = Array(counterTracker).fill().map((_, i) => ({
@@ -124,10 +124,10 @@ export default function App() {
         toughness: 1
       }));
       setCreatures((prev) => [...prev, ...newTokens]);
-      log += `Hornbeetle creates ${counterTracker} Beetle tokens (+${beetleBonus})`;
+      log += `Hornbeetle creates ${counterTracker} Beetle tokens with ${beetleBonus} counters each.`;
       addToTracker(counterTracker * beetleBonus);
     } else {
-      log += `No effects triggered.`;
+      log += `No end step effects triggered.`;
     }
     setCounterTracker(0);
     setResultLog((prev) => [log, ...prev]);
@@ -185,11 +185,11 @@ export default function App() {
   const clearLog = () => setResultLog([]);
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "700px", margin: "auto" }}>
+    <div style={{ padding: "2rem", maxWidth: "900px", margin: "auto" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <h2>Select Active Cards</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+      <h2>Active Cards</h2>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
         {supportCards.map((card) => (
           <div
             key={card.id}
@@ -222,7 +222,36 @@ export default function App() {
         Summon Vrestin
       </button>
 
-      <h2 style={{ marginTop: "2rem" }}>Add Creature</h2>
+      <h2 style={{ marginTop: "2rem" }}>Creatures</h2>
+      {creatures.map((c, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0.5rem",
+            background: selectedCards.includes(c.name.toLowerCase()) ? "#3a5f3a" : "#f4f4f4",
+            color: selectedCards.includes(c.name.toLowerCase()) ? "#fff" : "#222",
+            borderRadius: "0.5rem",
+            marginBottom: "0.5rem"
+          }}
+        >
+          <span style={{ fontWeight: "bold" }}>
+            {c.name}: {c.power + c.counters}/{c.toughness + c.counters} (+{c.counters})
+          </span>
+          <div>
+            <button onClick={() => updateCounter(i, 1)}>+1</button>
+            <button onClick={() => updateCounter(i, -1)} style={{ marginLeft: "0.5rem" }}>-1</button>
+            <button onClick={() => removeCreature(i)} style={{ marginLeft: "0.5rem", color: "red" }}>🗑️</button>
+          </div>
+        </div>
+      ))}
+      <button onClick={clearAllCreatures} style={{ marginBottom: "2rem", width: "100%", background: "#500", color: "#fff" }}>
+        ❌ Clear All Creatures
+      </button>
+
+      <h2>Add Creature</h2>
       <input
         type="text"
         placeholder="Creature Name"
@@ -240,10 +269,6 @@ export default function App() {
       <button onClick={addCreature} style={{ marginTop: "0.5rem", width: "100%" }}>
         Add Creature
       </button>
-      <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", background: "#500", color: "#fff" }}>
-        ❌ Clear All Creatures
-      </button>
-
       {suggestions.length > 0 && (
         <ul style={{ listStyle: "none", padding: 0, marginTop: "0.5rem", background: "#3a5f3a", border: "1px solid #888", borderRadius: "6px", fontWeight: "bold", fontSize: "1rem", color: "#fff" }}>
           {suggestions.map((s, i) => (
@@ -258,29 +283,13 @@ export default function App() {
         </ul>
       )}
 
-      <h2 style={{ marginTop: "2rem" }}>Combat Phase</h2>
-      <button onClick={handleCombat} style={{ width: "100%" }}>
+      <h2 style={{ marginTop: "2rem" }}>Combat & End Step</h2>
+      <button onClick={handleCombat} style={{ width: "49%", marginRight: "2%" }}>
         Attack with Insects
       </button>
-
-      <h2 style={{ marginTop: "2rem" }}>End Step</h2>
-      <button onClick={handleEndStep} style={{ width: "100%" }}>
-        Go to End Step (Hornbeetle Trigger)
+      <button onClick={handleEndStep} style={{ width: "49%" }}>
+        End Step (Hornbeetle)
       </button>
-
-      <h2 style={{ marginTop: "2rem" }}>Creatures</h2>
-      {creatures.map((c, i) => (
-        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-          <span style={{ fontWeight: "bold", color: "#222", fontSize: "1rem" }}>
-            {c.name}: {c.power + c.counters}/{c.toughness + c.counters} (+{c.counters})
-          </span>
-          <div>
-            <button onClick={() => updateCounter(i, 1)}>+1</button>
-            <button onClick={() => updateCounter(i, -1)} style={{ marginLeft: "0.5rem" }}>-1</button>
-            <button onClick={() => removeCreature(i)} style={{ marginLeft: "0.5rem", color: "red" }}>🗑️</button>
-          </div>
-        </div>
-      ))}
 
       {resultLog.length > 0 && (
         <div style={{ marginTop: "2rem" }}>
