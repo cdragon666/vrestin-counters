@@ -185,9 +185,9 @@ export default function App() {
   const clearLog = () => setResultLog([]);
 
   return (
-    <div style={{ padding: "1rem", display: "flex", flexWrap: "wrap" }}>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "2rem", padding: "2rem" }}>
       {/* Left Column */}
-      <div style={{ flex: "1 1 50%", paddingRight: "1rem", minWidth: "300px" }}>
+      <div style={{ flex: 1, minWidth: "300px" }}>
         <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
 
         <h2>Select Active Cards</h2>
@@ -260,17 +260,18 @@ export default function App() {
           </ul>
         )}
 
-        <h2 style={{ marginTop: "2rem" }}>Combat & End Step</h2>
-        <button onClick={handleCombat} style={{ width: "100%" }}>
-          Attack with Insects
-        </button>
-        <button onClick={handleEndStep} style={{ marginTop: "0.5rem", width: "100%" }}>
-          Go to End Step (Hornbeetle Trigger)
-        </button>
+        <div style={{ display: "flex", gap: "1rem", marginTop: "2rem" }}>
+          <button onClick={handleCombat} style={{ flex: 1 }}>
+            Attack with Insects
+          </button>
+          <button onClick={handleEndStep} style={{ flex: 1 }}>
+            End Step Trigger
+          </button>
+        </div>
       </div>
 
       {/* Right Column */}
-      <div style={{ flex: "1 1 50%", minWidth: "300px" }}>
+      <div style={{ flex: 1, minWidth: "300px" }}>
         <h2>Creatures</h2>
         {creatures.map((c, i) => (
           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
