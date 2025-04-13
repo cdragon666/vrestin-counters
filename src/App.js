@@ -23,6 +23,7 @@ const creatureData = {
 };
 
 export default function App() {
+  const [mode, setMode] = useState("vrestin");
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
   const [creatures, setCreatures] = useState([]);
@@ -75,8 +76,7 @@ export default function App() {
 
     addToTracker(vrestinCounters + base * insectCounters);
 
-    let log = `[ETB Phase]\n✨ Vrestin enters with ${vrestinCounters} counters\n`;
-    log += `🐞 ${base} Insect tokens created (+${insectCounters})`;
+    let log = `[ETB Phase]\n✨ Vrestin enters with ${vrestinCounters} counters\n🐞 ${base} Insect tokens created (+${insectCounters})`;
 
     const newCreatures = [
       { name: "Vrestin", counters: vrestinCounters },
@@ -103,9 +103,10 @@ export default function App() {
       return { ...c, counters: c.counters + added };
     });
 
-    log += `🌟 All insects +${insectBonus}`;
     if (has("anduril")) {
-      log += `, all creatures +${andurilBonus} from Andúril`;
+      log += `🌟 All insects +${insectBonus}, all creatures +${andurilBonus} from Andúril`;
+    } else {
+      log += `🌟 All insects +${insectBonus}`;
     }
 
     setCreatures(updatedCreatures);
@@ -136,6 +137,10 @@ export default function App() {
 
   const removeCreature = (index) => {
     setCreatures((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const clearAllCreatures = () => {
+    setCreatures([]);
   };
 
   const addCreature = () => {
@@ -173,11 +178,23 @@ export default function App() {
   };
 
   const clearLog = () => setResultLog([]);
-  const clearCreatures = () => setCreatures([]);
+
+  if (mode === "helper") {
+    return (
+      <div style={{ padding: "2rem" }}>
+        <h1>🧠 MTG Mechanics Master</h1>
+        <p>This section is under development. It will help players look up card rulings, interactions, and timing rules.</p>
+        <button onClick={() => setMode("vrestin")}>Switch to Devlin Mode</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "2rem", maxWidth: "700px", margin: "auto" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
+      <button onClick={() => setMode("helper")} style={{ marginBottom: "1rem" }}>
+        Switch to MTG Mechanics Master
+      </button>
 
       <h2>Select Active Cards</h2>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
@@ -222,6 +239,9 @@ export default function App() {
       <button onClick={addCreature} style={{ marginTop: "0.5rem", width: "100%" }}>
         Add Creature
       </button>
+      <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", background: "#500", color: "#fff" }}>
+        ❌ Clear All Creatures
+      </button>
 
       {suggestions.length > 0 && (
         <ul style={{ listStyle: "none", padding: 0, marginTop: "0.5rem", background: "#111", border: "1px solid #888", borderRadius: "6px", fontWeight: "bold", fontSize: "1rem", color: "#fff" }}>
@@ -258,12 +278,6 @@ export default function App() {
           </div>
         </div>
       ))}
-
-      <div style={{ marginTop: "1rem", textAlign: "right" }}>
-        <button onClick={clearCreatures} style={{ background: "darkred", color: "white", padding: "0.5rem 1rem", borderRadius: "6px" }}>
-          Delete All Creatures
-        </button>
-      </div>
 
       {resultLog.length > 0 && (
         <div style={{ marginTop: "2rem" }}>
