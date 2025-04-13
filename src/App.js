@@ -1,5 +1,4 @@
 import { useState } from "react";
-import MechanicsMaster from "./MechanicsMaster"; // ✅ Import helper page
 
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
@@ -180,9 +179,14 @@ export default function App() {
 
   const clearLog = () => setResultLog([]);
 
-  // 🔀 ROUTE TO HELPER
   if (mode === "helper") {
-    return <MechanicsMaster />;
+    return (
+      <div style={{ padding: "2rem" }}>
+        <h1>🧠 MTG Mechanics Master</h1>
+        <p>This section is under development. It will help players look up card rulings, interactions, and timing rules.</p>
+        <button onClick={() => setMode("vrestin")}>Switch to Devlin Mode</button>
+      </div>
+    );
   }
 
   return (
@@ -192,8 +196,102 @@ export default function App() {
         Switch to MTG Mechanics Master
       </button>
 
-      {/* Rest of your component stays unchanged */}
-      {/* ... all your input, buttons, creatures, and logs UI here ... */}
+      <h2>Select Active Cards</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+        {supportCards.map((card) => (
+          <div
+            key={card.id}
+            className={`card-tile ${selectedCards.includes(card.id) ? "selected" : ""}`}
+            onClick={() => toggleCard(card.id)}
+          >
+            {card.name}
+          </div>
+        ))}
+      </div>
+
+      <h2 style={{ marginTop: "2rem" }}>Vrestin Entry</h2>
+      <label htmlFor="vrestinX">X value:</label>
+      <input
+        type="number"
+        id="vrestinX"
+        value={vrestinX}
+        onChange={(e) => setVrestinX(e.target.value)}
+      />
+      <button onClick={calculateETB} style={{ marginTop: "0.5rem", width: "100%" }}>
+        Summon Vrestin
+      </button>
+
+      <h2 style={{ marginTop: "2rem" }}>Add Creature</h2>
+      <input
+        type="text"
+        placeholder="Creature Name"
+        value={newCreatureName}
+        onChange={handleNameChange}
+        style={{ width: "60%", marginRight: "1%" }}
+      />
+      <input
+        type="number"
+        placeholder="+1/+1 Counters"
+        value={startingCounters}
+        onChange={(e) => setStartingCounters(e.target.value)}
+        style={{ width: "35%" }}
+      />
+      <button onClick={addCreature} style={{ marginTop: "0.5rem", width: "100%" }}>
+        Add Creature
+      </button>
+      <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", background: "#500", color: "#fff" }}>
+        ❌ Clear All Creatures
+      </button>
+
+      {suggestions.length > 0 && (
+        <ul style={{ listStyle: "none", padding: 0, marginTop: "0.5rem", background: "#111", border: "1px solid #888", borderRadius: "6px", fontWeight: "bold", fontSize: "1rem", color: "#fff" }}>
+          {suggestions.map((s, i) => (
+            <li
+              key={i}
+              style={{ padding: "0.5rem 0.7rem", cursor: "pointer", borderBottom: "1px solid #333" }}
+              onClick={() => fillSuggestion(s)}
+            >
+              {s.replace(/\b\w/g, (c) => c.toUpperCase())}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h2 style={{ marginTop: "2rem" }}>Combat Phase</h2>
+      <button onClick={handleCombat} style={{ width: "100%" }}>
+        Attack with Insects
+      </button>
+
+      <h2 style={{ marginTop: "2rem" }}>End Step</h2>
+      <button onClick={handleEndStep} style={{ width: "100%" }}>
+        Go to End Step (Hornbeetle Trigger)
+      </button>
+
+      <h2 style={{ marginTop: "2rem" }}>Creatures</h2>
+      {creatures.map((c, i) => (
+        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+          <span>{c.name}: +{c.counters}/+{c.counters}</span>
+          <div>
+            <button onClick={() => updateCounter(i, 1)}>+1</button>
+            <button onClick={() => updateCounter(i, -1)} style={{ marginLeft: "0.5rem" }}>-1</button>
+            <button onClick={() => removeCreature(i)} style={{ marginLeft: "0.5rem", color: "red" }}>🗑️</button>
+          </div>
+        </div>
+      ))}
+
+      {resultLog.length > 0 && (
+        <div style={{ marginTop: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <h2>Result Log</h2>
+            <button onClick={clearLog}>Clear</button>
+          </div>
+          <textarea
+            readOnly
+            value={resultLog.join("\n-------------------\n")}
+            style={{ width: "100%", height: "200px", fontFamily: "monospace" }}
+          />
+        </div>
+      )}
     </div>
   );
 }
