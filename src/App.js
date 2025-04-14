@@ -32,10 +32,14 @@ export default function App() {
   const [suggestions, setSuggestions] = useState([]);
   const [counterTracker, setCounterTracker] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState({});
+  const [expanded, setExpanded] = useState({
+    cards: false,
+    creatures: false,
+    log: false
+  });
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -45,10 +49,6 @@ export default function App() {
     setSelectedCards((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
-  };
-
-  const toggleSection = (section) => {
-    setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
   const has = (id) => selectedCards.includes(id);
@@ -198,27 +198,29 @@ export default function App() {
   const clearLog = () => setResultLog([]);
 
   const Section = ({ title, id, children }) => (
-    <div style={{ marginBottom: "2rem" }}>
-      {isMobile && (
-        <button
-          onClick={() => toggleSection(id)}
-          style={{ width: "100%", marginBottom: "0.5rem" }}
-        >
-          {collapsedSections[id] ? `Show ${title}` : `Hide ${title}`}
-        </button>
+    <div style={{ marginBottom: "1.5rem" }}>
+      {isMobile ? (
+        <>
+          <button onClick={() => setExpanded((e) => ({ ...e, [id]: !e[id] }))} style={{ width: "100%", padding: "0.5rem", fontWeight: "bold" }}>
+            {expanded[id] ? `▼ ${title}` : `▶ ${title}`}
+          </button>
+          {expanded[id] && <div style={{ marginTop: "0.5rem" }}>{children}</div>}
+        </>
+      ) : (
+        <>
+          <h2>{title}</h2>
+          {children}
+        </>
       )}
-      {(!isMobile || !collapsedSections[id]) && <>{children}</>}
     </div>
   );
 
   return (
     <div style={{ padding: "2rem", maxWidth: "1000px", margin: "auto" }}>
       <h1 style={{ textAlign: "center" }}>Counter Tracker</h1>
-
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "2rem" }}>
+      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
         <div>
-          <Section title="Active Cards" id="cards">
-            <h2>Select Active Cards</h2>
+          <Section title="Select Active Cards" id="cards">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
               {supportCards.map((card) => (
                 <div
@@ -241,8 +243,7 @@ export default function App() {
             </div>
           </Section>
 
-          <Section title="Summon Vrestin" id="vrestin">
-            <h2>Vrestin Entry</h2>
+          <Section title="Vrestin Entry" id="vrestin">
             <input
               type="number"
               placeholder="X value"
@@ -256,7 +257,6 @@ export default function App() {
           </Section>
 
           <Section title="Add Creature" id="add">
-            <h2>Add Creature</h2>
             <input
               type="text"
               placeholder="Creature Name"
@@ -295,7 +295,6 @@ export default function App() {
 
         <div>
           <Section title="Creatures" id="creatures">
-            <h2>Creatures</h2>
             {creatures.map((c, i) => (
               <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
                 <span style={{ fontWeight: "bold", color: "#fff", fontSize: "1rem" }}>
@@ -312,7 +311,7 @@ export default function App() {
 
           <Section title="Result Log" id="log">
             {resultLog.length > 0 && (
-              <div style={{ marginTop: "2rem" }}>
+              <>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <h2>Result Log</h2>
                   <button onClick={clearLog}>Clear</button>
@@ -322,20 +321,12 @@ export default function App() {
                   value={resultLog.join("\n-------------------\n")}
                   style={{ width: "100%", height: "200px", fontFamily: "monospace" }}
                 />
-              </div>
+              </>
             )}
-          </Section>
-
-          <Section title="Combat Phase" id="combat">
-            <h2>Combat Phase</h2>
-            <button onClick={handleCombat} style={{ width: "100%" }}>
+            <button onClick={handleCombat} style={{ width: "100%", marginTop: "1rem" }}>
               Attack with Insects
             </button>
-          </Section>
-
-          <Section title="End Step" id="end">
-            <h2>End Step</h2>
-            <button onClick={handleEndStep} style={{ width: "100%" }}>
+            <button onClick={handleEndStep} style={{ width: "100%", marginTop: "0.5rem" }}>
               Go to End Step (Hornbeetle Trigger)
             </button>
           </Section>
