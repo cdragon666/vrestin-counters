@@ -153,10 +153,10 @@ export default function App() {
     <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
+      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", padding: "1rem" }}>
         <div>
           <h2>Select Active Cards</h2>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
             {supportCards.map((card) => (
               <div
                 key={card.id}
@@ -164,7 +164,7 @@ export default function App() {
                 style={{
                   backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
                   color: "white",
-                  padding: "0.5rem 1rem",
+                  padding: "0.8rem 1.2rem",
                   borderRadius: "8px",
                   cursor: "pointer",
                 }}
@@ -180,9 +180,11 @@ export default function App() {
             placeholder="X value"
             value={vrestinX}
             onChange={(e) => setVrestinX(e.target.value)}
-            style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
+            style={{ width: "100%", padding: "0.8rem", marginBottom: "1rem", borderRadius: "8px" }}
           />
-          <button onClick={calculateETB} style={{ width: "100%", padding: "0.5rem" }}>Summon Vrestin</button>
+          <button onClick={calculateETB} style={{ width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
+            Summon Vrestin
+          </button>
 
           <h2 style={{ marginTop: "2rem" }}>Add Creature</h2>
           <input
@@ -190,50 +192,50 @@ export default function App() {
             placeholder="Creature Name"
             value={newCreatureName}
             onChange={handleNameChange}
-            style={{ width: "60%", marginRight: "2%" }}
+            style={{ width: "60%", marginRight: "2%", padding: "0.8rem", borderRadius: "8px" }}
           />
           <input
             type="number"
             placeholder="Counters"
             value={startingCounters}
             onChange={(e) => setStartingCounters(e.target.value)}
-            style={{ width: "35%" }}
+            style={{ width: "35%", padding: "0.8rem", borderRadius: "8px" }}
           />
-          <button onClick={addCreature} style={{ marginTop: "0.5rem", width: "100%" }}>Add Creature</button>
-          <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", backgroundColor: "#800", color: "white" }}>Clear All Creatures</button>
-          {suggestions.length > 0 && (
-            <ul style={{ backgroundColor: "#333", color: "white", padding: "0.5rem", borderRadius: "5px" }}>
-              {suggestions.map((s, i) => (
-                <li key={i} onClick={() => fillSuggestion(s)} style={{ cursor: "pointer", padding: "0.3rem 0" }}>{s}</li>
-              ))}
-            </ul>
-          )}
+          <button onClick={addCreature} style={{ marginTop: "1rem", width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
+            Add Creature
+          </button>
+          <button onClick={clearAllCreatures} style={{ marginTop: "1rem", width: "100%", padding: "0.8rem", backgroundColor: "#800", color: "white", borderRadius: "8px" }}>
+            Clear All Creatures
+          </button>
         </div>
 
         <div>
           <h2>Creatures</h2>
           {creatures.map((c, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem", background: "#333", padding: "0.5rem", borderRadius: "8px" }}>
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", background: "#333", padding: "1rem", borderRadius: "8px" }}>
               <span style={{ color: "white" }}>{c.name}: +{c.counters}/+{c.counters}</span>
               <div>
-                <button onClick={() => updateCounter(i, 1)}>+1</button>
-                <button onClick={() => updateCounter(i, -1)} style={{ marginLeft: "0.5rem" }}>-1</button>
-                <button onClick={() => removeCreature(i)} style={{ marginLeft: "0.5rem", color: "red" }}>🗑️</button>
+                <button onClick={() => updateCounter(i, 1)} style={{ marginRight: "0.5rem", padding: "0.6rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>+1</button>
+                <button onClick={() => updateCounter(i, -1)} style={{ marginRight: "0.5rem", padding: "0.6rem", backgroundColor: "#F44336", color: "white", borderRadius: "8px" }}>-1</button>
+                <button onClick={() => removeCreature(i)} style={{ padding: "0.6rem", backgroundColor: "#FF5722", color: "white", borderRadius: "8px" }}>🗑️</button>
               </div>
             </div>
           ))}
-
+          
           <h2 style={{ marginTop: "2rem" }}>Result Log</h2>
           <textarea
             readOnly
             value={resultLog.join("\n-------------------\n")}
-            style={{ width: "100%", height: "150px", backgroundColor: "#222", color: "white", fontFamily: "monospace" }}
+            style={{
+              width: "100%",
+              height: "150px",
+              backgroundColor: "#222",
+              color: "white",
+              fontFamily: "monospace",
+              padding: "0.8rem",
+              borderRadius: "8px",
+            }}
           />
-
-          <h2 style={{ marginTop: "2rem" }}>Actions</h2>
-          <button onClick={handleCombat} style={{ width: "100%", marginBottom: "0.5rem" }}>Attack with Insects</button>
-          <button onClick={handleEndStep} style={{ width: "100%" }}>Go to End Step</button>
-          <button onClick={clearLog} style={{ width: "100%", marginTop: "0.5rem", background: "#444", color: "white" }}>Clear Log</button>
         </div>
       </div>
     </div>
