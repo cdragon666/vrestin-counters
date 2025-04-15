@@ -93,7 +93,7 @@ import { useState, useEffect, useMemo } from "react";
      setCreatures([]);
    };
  
-   const clearLog = () => setResultLog([]);
+ 
  
    const addCreature = () => {
      const name = newCreatureName.trim();
