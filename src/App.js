@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
@@ -31,10 +31,87 @@ export default function App() {
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
 
+  const toggleCard = (id) => {
+    setSelectedCards((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+    );
+  };
+
+  const has = (id) => selectedCards.includes(id);
+
+  const getBaseCounterBonus = () => {
+    let bonus = 0;
+    if (has("hardened_scales")) bonus++;
+    if (has("conclave_mentor")) bonus++;
+    if (has("ozolith")) bonus++;
+    return bonus;
+  };
+
+  const getMultiplier = () => {
+    let multiplier = 1;
+    if (has("branching_evolution")) multiplier *= 2;
+    if (has("kami")) multiplier *= 2;
+    if (has("innkeeper")) multiplier *= 2;
+    return multiplier;
+  };
+
+  const getEntryCounterBonus = () => {
+    let base = 0;
+    if (has("unicorn")) base++;
+    if (has("crawler")) base++;
+    base += getBaseCounterBonus();
+    return Math.ceil(base * getMultiplier());
+  };
+
+  const calculateETB = () => {
+    const base = parseInt(vrestinX);
+    const vrestinCounters = Math.ceil((base + getBaseCounterBonus()) * getMultiplier());
+    const insectCounters = getEntryCounterBonus();
+
+    const log = `[ETB Phase]\n✨ Vrestin enters with ${vrestinCounters} counters\n🐞 ${base} Insect tokens created (+${insectCounters})`;
+
+    const newCreatures = [
+      ...(creatures.find((c) => c.name === "Vrestin") ? [] : [{ name: "Vrestin", counters: vrestinCounters }]),
+      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, counters: insectCounters }))
+    ];
+
+    setCreatures((prev) => [...prev, ...newCreatures]);
+    setResultLog((prev) => [log, ...prev]);
+  };
+
+  const updateCounter = (index, delta) => {
+    setCreatures((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c))
+    );
+  };
+
+  const removeCreature = (index) => {
+    setCreatures((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const clearAllCreatures = () => {
+    setCreatures([]);
+  };
+
+  const addCreature = () => {
+    const name = newCreatureName.trim();
+    if (!name) return;
+    const data = creatureData[name.toLowerCase()];
+    const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
+    const final = Math.ceil((baseCounters + getBaseCounterBonus()) * getMultiplier());
+    setCreatures([...creatures, { name: newCreatureName, counters: final }]);
+    setNewCreatureName("");
+    setStartingCounters(0);
+    setSuggestions([]);
+  };
+
   const handleNameChange = (e) => {
     const input = e.target.value;
     setNewCreatureName(input);
-    if (!input) return setSuggestions([]);
+    if (!input) {
+      setSuggestions([]);
+      return;
+    }
     const matches = Object.keys(creatureData).filter((name) =>
       name.includes(input.toLowerCase())
     );
@@ -49,90 +126,116 @@ export default function App() {
     setSuggestions([]);
   };
 
-  const memoizedSuggestions = useMemo(() => (
-    suggestions.length > 0 ? (
-      <ul style={{ listStyle: "none", padding: 0, marginTop: "0.5rem", background: "#3a5f3a", border: "1px solid #888", borderRadius: "6px", fontWeight: "bold", fontSize: "1rem", color: "#fff" }}>
-        {suggestions.map((s, i) => (
-          <li
-            key={i}
-            style={{ padding: "0.5rem 0.7rem", cursor: "pointer", borderBottom: "1px solid #333" }}
-            onClick={() => fillSuggestion(s)}
-          >
-            {s.replace(/\b\w/g, (c) => c.toUpperCase())}
-          </li>
-        ))}
-      </ul>
-    ) : null
-  ), [suggestions]);
+  const handleCombat = () => {
+    const bonus = Math.ceil((1 + getBaseCounterBonus()) * getMultiplier());
+    const updated = creatures.map((c) => {
+      const isInsect = c.name.toLowerCase().includes("insect") || c.name === "Vrestin";
+      return {
+        ...c,
+        counters: c.counters + (isInsect ? bonus : 0)
+      };
+    });
+    setCreatures(updated);
+    const log = `[Combat Phase]\n🌟 All insects +${bonus}`;
+    setResultLog((prev) => [log, ...prev]);
+  };
+
+  const handleEndStep = () => {
+    const log = `[End Step]\nNo effects triggered.`;
+    setResultLog((prev) => [log, ...prev]);
+  };
+
+  const clearLog = () => setResultLog([]);
+
+  const isMobile = window.innerWidth < 768;
 
   return (
-    <div style={{ padding: "1rem", color: "#fff", background: "#1a1a1a", fontFamily: "Arial, sans-serif" }}>
+    <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
 
-        {/* Active Cards */}
+      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
         <div>
           <h2>Select Active Cards</h2>
-          <div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             {supportCards.map((card) => (
-              <div key={card.id}>{card.name}</div>
+              <div
+                key={card.id}
+                onClick={() => toggleCard(card.id)}
+                style={{
+                  backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
+                  color: "white",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
+              >
+                {card.name}
+              </div>
             ))}
           </div>
+
+          <h2 style={{ marginTop: "2rem" }}>Vrestin Entry</h2>
+          <input
+            type="number"
+            placeholder="X value"
+            value={vrestinX}
+            onChange={(e) => setVrestinX(e.target.value)}
+            style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
+          />
+          <button onClick={calculateETB} style={{ width: "100%", padding: "0.5rem" }}>Summon Vrestin</button>
+
+          <h2 style={{ marginTop: "2rem" }}>Add Creature</h2>
+          <input
+            type="text"
+            placeholder="Creature Name"
+            value={newCreatureName}
+            onChange={handleNameChange}
+            style={{ width: "60%", marginRight: "2%" }}
+          />
+          <input
+            type="number"
+            placeholder="Counters"
+            value={startingCounters}
+            onChange={(e) => setStartingCounters(e.target.value)}
+            style={{ width: "35%" }}
+          />
+          <button onClick={addCreature} style={{ marginTop: "0.5rem", width: "100%" }}>Add Creature</button>
+          <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", backgroundColor: "#800", color: "white" }}>Clear All Creatures</button>
+          {suggestions.length > 0 && (
+            <ul style={{ backgroundColor: "#333", color: "white", padding: "0.5rem", borderRadius: "5px" }}>
+              {suggestions.map((s, i) => (
+                <li key={i} onClick={() => fillSuggestion(s)} style={{ cursor: "pointer", padding: "0.3rem 0" }}>{s}</li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        {/* Creatures and Result Log */}
         <div>
           <h2>Creatures</h2>
-          <div>
-            {creatures.map((c, i) => (
-              <div key={i}>{c.name}: +{c.counters}/+{c.counters}</div>
-            ))}
-          </div>
+          {creatures.map((c, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem", background: "#333", padding: "0.5rem", borderRadius: "8px" }}>
+              <span style={{ color: "white" }}>{c.name}: +{c.counters}/+{c.counters}</span>
+              <div>
+                <button onClick={() => updateCounter(i, 1)}>+1</button>
+                <button onClick={() => updateCounter(i, -1)} style={{ marginLeft: "0.5rem" }}>-1</button>
+                <button onClick={() => removeCreature(i)} style={{ marginLeft: "0.5rem", color: "red" }}>🗑️</button>
+              </div>
+            </div>
+          ))}
 
-          <h2>Result Log</h2>
+          <h2 style={{ marginTop: "2rem" }}>Result Log</h2>
           <textarea
             readOnly
             value={resultLog.join("\n-------------------\n")}
-            style={{ width: "100%", height: "150px" }}
+            style={{ width: "100%", height: "150px", backgroundColor: "#222", color: "white", fontFamily: "monospace" }}
           />
+
+          <h2 style={{ marginTop: "2rem" }}>Actions</h2>
+          <button onClick={handleCombat} style={{ width: "100%", marginBottom: "0.5rem" }}>Attack with Insects</button>
+          <button onClick={handleEndStep} style={{ width: "100%" }}>Go to End Step</button>
+          <button onClick={clearLog} style={{ width: "100%", marginTop: "0.5rem", background: "#444", color: "white" }}>Clear Log</button>
         </div>
       </div>
-
-      {/* Vrestin Entry */}
-      <h2>Vrestin Entry</h2>
-      <input
-        type="number"
-        value={vrestinX}
-        onChange={(e) => setVrestinX(e.target.value)}
-        style={{ width: "100%" }}
-      />
-
-      {/* Add Creature */}
-      <h2>Add Creature</h2>
-      <input
-        type="text"
-        placeholder="Creature Name"
-        value={newCreatureName}
-        onChange={handleNameChange}
-        style={{ width: "60%", marginRight: "1%" }}
-      />
-      <input
-        type="number"
-        placeholder="Counters"
-        value={startingCounters}
-        onChange={(e) => setStartingCounters(e.target.value)}
-        style={{ width: "35%" }}
-      />
-      <button style={{ display: "block", marginTop: "0.5rem", width: "100%" }}>Add Creature</button>
-
-      {memoizedSuggestions}
-
-      {/* Action Buttons */}
-      <h2 style={{ marginTop: "2rem" }}>Combat Phase</h2>
-      <button style={{ width: "100%" }}>Attack with Insects</button>
-
-      <h2 style={{ marginTop: "2rem" }}>End Step</h2>
-      <button style={{ width: "100%" }}>Go to End Step (Hornbeetle Trigger)</button>
     </div>
   );
 }
