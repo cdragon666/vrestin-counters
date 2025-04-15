@@ -71,47 +71,82 @@ export default function App() {
   return (
     <div style={{ padding: "1rem", color: "#fff", background: "#1a1a1a", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
-      <h2>Select Active Cards</h2>
-      <div>
-        {supportCards.map((card) => (
-          <div key={card.id}>{card.name}</div>
-        ))}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "2rem", justifyContent: "space-between" }}>
+        <div style={{ flex: 1 }}>
+          <h2>Select Active Cards</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+            {supportCards.map((card) => (
+              <div
+                key={card.id}
+                style={{
+                  padding: "0.5rem",
+                  background: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
+                  color: "#fff",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  textAlign: "center"
+                }}
+                onClick={() =>
+                  setSelectedCards((prev) =>
+                    prev.includes(card.id) ? prev.filter((id) => id !== card.id) : [...prev, card.id]
+                  )
+                }
+              >
+                {card.name}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ flex: 1 }}>
+          <h2>Creatures</h2>
+          <div>
+            {creatures.map((c, i) => (
+              <div key={i} style={{ marginBottom: "0.5rem" }}>
+                {c.name}: +{c.counters}/+{c.counters}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <h2>Vrestin Entry</h2>
-      <input
-        type="number"
-        value={vrestinX}
-        onChange={(e) => setVrestinX(e.target.value)}
-        style={{ width: "100%" }}
-        inputMode="numeric"
-      />
-
-      <h2>Add Creature</h2>
-      <input
-        type="text"
-        placeholder="Creature Name"
-        value={newCreatureName}
-        onChange={handleNameChange}
-        style={{ width: "100%" }}
-        inputMode="text"
-      />
-
-      {memoizedSuggestions}
-
-      <h2>Creatures</h2>
-      <div>
-        {creatures.map((c, i) => (
-          <div key={i}>{c.name}: +{c.counters}/+{c.counters}</div>
-        ))}
+      <div style={{ marginTop: "2rem" }}>
+        <h2>Vrestin Entry</h2>
+        <input
+          type="number"
+          value={vrestinX}
+          onChange={(e) => setVrestinX(e.target.value)}
+          style={{ width: "100%", padding: "0.5rem" }}
+        />
       </div>
 
-      <h2>Result Log</h2>
-      <textarea
-        readOnly
-        value={resultLog.join("\n-------------------\n")}
-        style={{ width: "100%", height: "150px" }}
-      />
+      <div style={{ marginTop: "2rem" }}>
+        <h2>Add Creature</h2>
+        <input
+          type="text"
+          placeholder="Creature Name"
+          value={newCreatureName}
+          onChange={handleNameChange}
+          style={{ width: "100%", padding: "0.5rem" }}
+        />
+        <input
+          type="number"
+          placeholder="Starting Counters"
+          value={startingCounters}
+          onChange={(e) => setStartingCounters(Number(e.target.value))}
+          style={{ width: "100%", padding: "0.5rem", marginTop: "0.5rem" }}
+        />
+        {memoizedSuggestions}
+      </div>
+
+      <div style={{ marginTop: "2rem" }}>
+        <h2>Result Log</h2>
+        <textarea
+          readOnly
+          value={resultLog.join("\n-------------------\n")}
+          style={{ width: "100%", height: "150px", padding: "0.5rem" }}
+        />
+      </div>
     </div>
   );
 }
