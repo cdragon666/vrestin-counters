@@ -93,6 +93,8 @@ export default function App() {
     setCreatures([]);
   };
 
+  const clearLog = () => setResultLog([]);
+
   const addCreature = () => {
     const name = newCreatureName.trim();
     if (!name) return;
@@ -145,15 +147,13 @@ export default function App() {
     setResultLog((prev) => [log, ...prev]);
   };
 
-  const clearLog = () => setResultLog([]);
-
   const isMobile = window.innerWidth < 768;
 
   return (
     <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", padding: "1rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginBottom: "2rem" }}>
         <div>
           <h2>Select Active Cards</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
@@ -167,6 +167,7 @@ export default function App() {
                   padding: "0.8rem 1.2rem",
                   borderRadius: "8px",
                   cursor: "pointer",
+                  width: "max-content"
                 }}
               >
                 {card.name}
@@ -174,7 +175,7 @@ export default function App() {
             ))}
           </div>
 
-          <h2 style={{ marginTop: "2rem" }}>Vrestin Entry</h2>
+          <h2 style={{ marginTop: "1rem" }}>Vrestin Entry</h2>
           <input
             type="number"
             placeholder="X value"
@@ -186,7 +187,7 @@ export default function App() {
             Summon Vrestin
           </button>
 
-          <h2 style={{ marginTop: "2rem" }}>Add Creature</h2>
+          <h2 style={{ marginTop: "1rem" }}>Add Creature</h2>
           <input
             type="text"
             placeholder="Creature Name"
@@ -221,8 +222,8 @@ export default function App() {
               </div>
             </div>
           ))}
-          
-          <h2 style={{ marginTop: "2rem" }}>Result Log</h2>
+
+          <h2 style={{ marginTop: "1rem" }}>Result Log</h2>
           <textarea
             readOnly
             value={resultLog.join("\n-------------------\n")}
@@ -236,6 +237,9 @@ export default function App() {
               borderRadius: "8px",
             }}
           />
+          <button onClick={clearLog} style={{ width: "100%", marginTop: "1rem", padding: "0.8rem", backgroundColor: "#f44336", color: "white", borderRadius: "8px" }}>
+            Clear Log
+          </button>
         </div>
       </div>
     </div>
