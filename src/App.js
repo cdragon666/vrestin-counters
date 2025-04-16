@@ -30,7 +30,7 @@ export default function App() {
   const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [rawNameInput, setRawNameInput] = useState("");
+  const [inputFocused, setInputFocused] = useState(false);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -72,8 +72,14 @@ export default function App() {
     const log = `[ETB Phase]\n✨ Vrestin enters with ${vrestinCounters} counters\n🐞 ${base} Insect tokens created (+${insectCounters})`;
 
     const newCreatures = [
-      ...(creatures.find((c) => c.name === "Vrestin") ? [] : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters }]),
-      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, base: [1, 1], counters: insectCounters }))
+      ...(creatures.find((c) => c.name === "Vrestin")
+        ? []
+        : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters }]),
+      ...Array(base).fill().map((_, i) => ({
+        name: `Insect ${i + 1}`,
+        base: [1, 1],
+        counters: insectCounters
+      }))
     ];
 
     setCreatures((prev) => [...prev, ...newCreatures]);
@@ -82,7 +88,9 @@ export default function App() {
 
   const updateCounter = (index, delta) => {
     setCreatures((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c))
+      prev.map((c, i) =>
+        i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c
+      )
     );
   };
 
@@ -111,21 +119,13 @@ export default function App() {
 
   const handleNameChange = (e) => {
     const input = e.target.value;
-    setRawNameInput(input);
     setNewCreatureName(input);
+    if (!input) return setSuggestions([]);
+    const matches = Object.keys(creatureData).filter((name) =>
+      name.includes(input.toLowerCase())
+    );
+    setSuggestions(matches);
   };
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!rawNameInput) return setSuggestions([]);
-      const matches = Object.keys(creatureData).filter((name) =>
-        name.includes(rawNameInput.toLowerCase())
-      );
-      setSuggestions(matches);
-    }, 200);
-
-    return () => clearTimeout(timeout);
-  }, [rawNameInput]);
 
   const fillSuggestion = (name) => {
     const displayName = name.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -135,22 +135,17 @@ export default function App() {
     setSuggestions([]);
   };
 
-  const isMobile = window.innerWidth < 768;
-  const collapsibleSections = isMobile;
-
   const Section = ({ title, children }) => {
-    const [open, setOpen] = useState(!collapsibleSections);
+    const [open, setOpen] = useState(true);
     return (
       <div style={{ marginBottom: "1.5rem" }}>
-        {collapsibleSections && (
-          <button
-            onClick={() => setOpen((o) => !o)}
-            style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem", fontWeight: "bold" }}
-          >
-            {open ? `▼ ${title}` : `▶ ${title}`}
-          </button>
-        )}
-        {(!collapsibleSections || open) && children}
+        <button
+          onClick={() => setOpen((o) => !o)}
+          style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem", fontWeight: "bold" }}
+        >
+          {open ? `▼ ${title}` : `▶ ${title}`}
+        </button>
+        {open && children}
       </div>
     );
   };
@@ -159,7 +154,7 @@ export default function App() {
     <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
         <div>
           <Section title="Select Active Cards">
             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
@@ -199,6 +194,8 @@ export default function App() {
               type="text"
               placeholder="Creature Name"
               value={newCreatureName}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setTimeout(() => setInputFocused(false), 200)}
               onChange={handleNameChange}
               style={{ width: "60%", marginRight: "2%", padding: "0.8rem", borderRadius: "8px" }}
             />
