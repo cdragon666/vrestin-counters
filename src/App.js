@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
@@ -30,6 +30,7 @@ export default function App() {
   const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [openSections, setOpenSections] = useState({});
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -134,38 +135,32 @@ export default function App() {
     setSuggestions([]);
   };
 
+  const isMobile = window.innerWidth < 768;
+
   const Section = ({ title, children }) => {
-    const [open, setOpen] = useState(false);
+    const isOpen = openSections[title] ?? !isMobile;
+    const toggle = () => setOpenSections((prev) => ({ ...prev, [title]: !isOpen }));
+
     return (
-      <div style={{ marginBottom: "1.5rem", border: "1px solid #333", borderRadius: "6px", overflow: "hidden" }}>
-        <button
-          onClick={() => setOpen((o) => !o)}
-          style={{
-            width: "100%",
-            textAlign: "left",
-            background: "#333",
-            color: "white",
-            padding: "0.6rem 1rem",
-            fontWeight: "bold",
-            cursor: "pointer",
-            borderBottom: "1px solid #222"
-          }}
-        >
-          {open ? `▼ ${title}` : `▶ ${title}`}
-        </button>
-        {open && <div style={{ padding: "1rem" }}>{children}</div>}
+      <div style={{ marginBottom: "1.5rem" }}>
+        {isMobile && (
+          <button onClick={toggle} style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem", fontWeight: "bold" }}>
+            {isOpen ? `▼ ${title}` : `▶ ${title}`}
+          </button>
+        )}
+        {(!isMobile || isOpen) && children}
       </div>
     );
   };
 
   return (
     <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ textAlign: "center", marginBottom: "2rem" }}>Vrestin +1/+1 Counter Tracker</h1>
+      <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", maxWidth: "1200px", margin: "auto" }}>
+      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
         <div>
           <Section title="Select Active Cards">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
               {supportCards.map((card) => (
                 <div
                   key={card.id}
@@ -173,8 +168,8 @@ export default function App() {
                   style={{
                     backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
                     color: "white",
-                    padding: "0.5rem 1rem",
-                    borderRadius: "6px",
+                    padding: "0.8rem 1.2rem",
+                    borderRadius: "8px",
                     cursor: "pointer"
                   }}
                 >
@@ -190,9 +185,9 @@ export default function App() {
               placeholder="X value"
               value={vrestinX}
               onChange={(e) => setVrestinX(e.target.value)}
-              style={{ width: "100%", padding: "0.6rem", marginBottom: "1rem", borderRadius: "6px" }}
+              style={{ width: "100%", padding: "0.8rem", marginBottom: "1rem", borderRadius: "8px" }}
             />
-            <button onClick={calculateETB} style={{ width: "100%", padding: "0.6rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "6px" }}>
+            <button onClick={calculateETB} style={{ width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
               Summon Vrestin
             </button>
           </Section>
@@ -203,19 +198,19 @@ export default function App() {
               placeholder="Creature Name"
               value={newCreatureName}
               onChange={handleNameChange}
-              style={{ width: "60%", marginRight: "2%", padding: "0.6rem", borderRadius: "6px" }}
+              style={{ width: "60%", marginRight: "2%", padding: "0.8rem", borderRadius: "8px" }}
             />
             <input
               type="number"
               placeholder="+1/+1 Counters"
               value={startingCounters}
               onChange={(e) => setStartingCounters(e.target.value)}
-              style={{ width: "35%", padding: "0.6rem", borderRadius: "6px" }}
+              style={{ width: "35%", padding: "0.8rem", borderRadius: "8px" }}
             />
-            <button onClick={addCreature} style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "6px" }}>
+            <button onClick={addCreature} style={{ marginTop: "1rem", width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
               Add Creature
             </button>
-            <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", padding: "0.6rem", backgroundColor: "#800", color: "white", borderRadius: "6px" }}>
+            <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", padding: "0.8rem", backgroundColor: "#800", color: "white", borderRadius: "8px" }}>
               Clear All Creatures
             </button>
           </Section>
@@ -224,11 +219,11 @@ export default function App() {
         <div>
           <Section title="Creatures">
             {creatures.map((c, i) => (
-              <div key={i} style={{ background: "#333", padding: "0.8rem", borderRadius: "6px", marginBottom: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={i} style={{ background: "#333", padding: "1rem", borderRadius: "8px", marginBottom: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>{c.name}: {c.base[0]}/{c.base[1]} (+{c.counters}/+{c.counters})</span>
                 <div>
-                  <button onClick={() => updateCounter(i, 1)} style={{ marginRight: "0.3rem" }}>+1</button>
-                  <button onClick={() => updateCounter(i, -1)} style={{ marginRight: "0.3rem" }}>-1</button>
+                  <button onClick={() => updateCounter(i, 1)} style={{ marginRight: "0.5rem" }}>+1</button>
+                  <button onClick={() => updateCounter(i, -1)} style={{ marginRight: "0.5rem" }}>-1</button>
                   <button onClick={() => removeCreature(i)}>🗑️</button>
                 </div>
               </div>
@@ -239,9 +234,9 @@ export default function App() {
             <textarea
               readOnly
               value={resultLog.join("\n-------------------\n")}
-              style={{ width: "100%", height: "150px", backgroundColor: "#222", color: "white", padding: "0.6rem", borderRadius: "6px", fontFamily: "monospace" }}
+              style={{ width: "100%", height: "150px", backgroundColor: "#222", color: "white", padding: "0.8rem", borderRadius: "8px", fontFamily: "monospace" }}
             />
-            <button onClick={clearLog} style={{ width: "100%", marginTop: "0.5rem", padding: "0.6rem", backgroundColor: "#f44336", color: "white", borderRadius: "6px" }}>
+            <button onClick={clearLog} style={{ width: "100%", marginTop: "0.5rem", padding: "0.8rem", backgroundColor: "#f44336", color: "white", borderRadius: "8px" }}>
               Clear Log
             </button>
           </Section>
