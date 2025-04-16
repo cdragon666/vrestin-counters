@@ -135,9 +135,9 @@ export default function App() {
     setSuggestions([]);
   };
 
-  const isMobile = window.innerWidth < 768;
+  const collapsibleSections = true;
 
-  const Section = ({ title, children }) => {
+const Section = memo(({ title, children }) => { ({ title, children }) => {
     const isOpen = openSections[title] ?? !isMobile;
     const toggle = () => setOpenSections((prev) => ({ ...prev, [title]: !isOpen }));
 
