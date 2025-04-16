@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from "react";
+import { useState } from "react";
 
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
@@ -22,25 +22,6 @@ const creatureData = {
   "springheart nantuko": { base: [2, 2], counters: 0 }
 };
 
-const Section = memo(({ title, children, isMobile }) => {
-  const [open, setOpen] = useState(!isMobile);
-  const sectionRef = useRef();
-
-  return (
-    <div style={{ marginBottom: "1.5rem" }} ref={sectionRef}>
-      {isMobile && (
-        <button
-          onClick={() => setOpen((o) => !o)}
-          style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem", fontWeight: "bold" }}
-        >
-          {open ? `▼ ${title}` : `▶ ${title}`}
-        </button>
-      )}
-      {(!isMobile || open) && children}
-    </div>
-  );
-});
-
 export default function App() {
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
@@ -49,13 +30,6 @@ export default function App() {
   const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -97,7 +71,9 @@ export default function App() {
     const log = `[ETB Phase]\n✨ Vrestin enters with ${vrestinCounters} counters\n🐞 ${base} Insect tokens created (+${insectCounters})`;
 
     const newCreatures = [
-      ...(creatures.find((c) => c.name === "Vrestin") ? [] : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters }]),
+      ...(creatures.find((c) => c.name === "Vrestin")
+        ? []
+        : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters }]),
       ...Array(base).fill().map((_, i) => ({
         name: `Insect ${i + 1}`,
         base: [1, 1],
@@ -111,7 +87,9 @@ export default function App() {
 
   const updateCounter = (index, delta) => {
     setCreatures((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c))
+      prev.map((c, i) =>
+        i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c
+      )
     );
   };
 
@@ -119,7 +97,10 @@ export default function App() {
     setCreatures((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const clearAllCreatures = () => setCreatures([]);
+  const clearAllCreatures = () => {
+    setCreatures([]);
+  };
+
   const clearLog = () => setResultLog([]);
 
   const addCreature = () => {
@@ -153,14 +134,38 @@ export default function App() {
     setSuggestions([]);
   };
 
+  const Section = ({ title, children }) => {
+    const [open, setOpen] = useState(false);
+    return (
+      <div style={{ marginBottom: "1.5rem", border: "1px solid #333", borderRadius: "6px", overflow: "hidden" }}>
+        <button
+          onClick={() => setOpen((o) => !o)}
+          style={{
+            width: "100%",
+            textAlign: "left",
+            background: "#333",
+            color: "white",
+            padding: "0.6rem 1rem",
+            fontWeight: "bold",
+            cursor: "pointer",
+            borderBottom: "1px solid #222"
+          }}
+        >
+          {open ? `▼ ${title}` : `▶ ${title}`}
+        </button>
+        {open && <div style={{ padding: "1rem" }}>{children}</div>}
+      </div>
+    );
+  };
+
   return (
     <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
+      <h1 style={{ textAlign: "center", marginBottom: "2rem" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", maxWidth: "1200px", margin: "auto" }}>
         <div>
-          <Section title="Select Active Cards" isMobile={isMobile}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+          <Section title="Select Active Cards">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
               {supportCards.map((card) => (
                 <div
                   key={card.id}
@@ -168,8 +173,8 @@ export default function App() {
                   style={{
                     backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
                     color: "white",
-                    padding: "0.8rem 1.2rem",
-                    borderRadius: "8px",
+                    padding: "0.5rem 1rem",
+                    borderRadius: "6px",
                     cursor: "pointer"
                   }}
                 >
@@ -179,64 +184,64 @@ export default function App() {
             </div>
           </Section>
 
-          <Section title="Vrestin Entry" isMobile={isMobile}>
+          <Section title="Vrestin Entry">
             <input
               type="number"
               placeholder="X value"
               value={vrestinX}
               onChange={(e) => setVrestinX(e.target.value)}
-              style={{ width: "100%", padding: "0.8rem", marginBottom: "1rem", borderRadius: "8px" }}
+              style={{ width: "100%", padding: "0.6rem", marginBottom: "1rem", borderRadius: "6px" }}
             />
-            <button onClick={calculateETB} style={{ width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
+            <button onClick={calculateETB} style={{ width: "100%", padding: "0.6rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "6px" }}>
               Summon Vrestin
             </button>
           </Section>
 
-          <Section title="Add Creature" isMobile={isMobile}>
+          <Section title="Add Creature">
             <input
               type="text"
               placeholder="Creature Name"
               value={newCreatureName}
               onChange={handleNameChange}
-              style={{ width: "60%", marginRight: "2%", padding: "0.8rem", borderRadius: "8px" }}
+              style={{ width: "60%", marginRight: "2%", padding: "0.6rem", borderRadius: "6px" }}
             />
             <input
               type="number"
               placeholder="+1/+1 Counters"
               value={startingCounters}
               onChange={(e) => setStartingCounters(e.target.value)}
-              style={{ width: "35%", padding: "0.8rem", borderRadius: "8px" }}
+              style={{ width: "35%", padding: "0.6rem", borderRadius: "6px" }}
             />
-            <button onClick={addCreature} style={{ marginTop: "1rem", width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
+            <button onClick={addCreature} style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "6px" }}>
               Add Creature
             </button>
-            <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", padding: "0.8rem", backgroundColor: "#800", color: "white", borderRadius: "8px" }}>
+            <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", padding: "0.6rem", backgroundColor: "#800", color: "white", borderRadius: "6px" }}>
               Clear All Creatures
             </button>
           </Section>
         </div>
 
         <div>
-          <Section title="Creatures" isMobile={isMobile}>
+          <Section title="Creatures">
             {creatures.map((c, i) => (
-              <div key={i} style={{ background: "#333", padding: "1rem", borderRadius: "8px", marginBottom: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={i} style={{ background: "#333", padding: "0.8rem", borderRadius: "6px", marginBottom: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>{c.name}: {c.base[0]}/{c.base[1]} (+{c.counters}/+{c.counters})</span>
                 <div>
-                  <button onClick={() => updateCounter(i, 1)} style={{ marginRight: "0.5rem" }}>+1</button>
-                  <button onClick={() => updateCounter(i, -1)} style={{ marginRight: "0.5rem" }}>-1</button>
+                  <button onClick={() => updateCounter(i, 1)} style={{ marginRight: "0.3rem" }}>+1</button>
+                  <button onClick={() => updateCounter(i, -1)} style={{ marginRight: "0.3rem" }}>-1</button>
                   <button onClick={() => removeCreature(i)}>🗑️</button>
                 </div>
               </div>
             ))}
           </Section>
 
-          <Section title="Result Log" isMobile={isMobile}>
+          <Section title="Result Log">
             <textarea
               readOnly
               value={resultLog.join("\n-------------------\n")}
-              style={{ width: "100%", height: "150px", backgroundColor: "#222", color: "white", padding: "0.8rem", borderRadius: "8px", fontFamily: "monospace" }}
+              style={{ width: "100%", height: "150px", backgroundColor: "#222", color: "white", padding: "0.6rem", borderRadius: "6px", fontFamily: "monospace" }}
             />
-            <button onClick={clearLog} style={{ width: "100%", marginTop: "0.5rem", padding: "0.8rem", backgroundColor: "#f44336", color: "white", borderRadius: "8px" }}>
+            <button onClick={clearLog} style={{ width: "100%", marginTop: "0.5rem", padding: "0.6rem", backgroundColor: "#f44336", color: "white", borderRadius: "6px" }}>
               Clear Log
             </button>
           </Section>
