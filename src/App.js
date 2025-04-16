@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from "react";
+import { useState, useEffect } from "react";
 
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
@@ -22,31 +22,6 @@ const creatureData = {
   "springheart nantuko": { base: [2, 2], counters: 0 }
 };
 
-const CreatureInput = memo(({ newCreatureName, startingCounters, handleNameChange, setStartingCounters, addCreature }) => (
-  <>
-    <input
-      type="text"
-      placeholder="Creature Name"
-      value={newCreatureName}
-      onChange={handleNameChange}
-      style={{ width: "60%", marginRight: "2%", padding: "0.8rem", borderRadius: "8px" }}
-    />
-    <input
-      type="number"
-      placeholder="+1/+1 Counters"
-      value={startingCounters}
-      onChange={(e) => setStartingCounters(e.target.value)}
-      style={{ width: "35%", padding: "0.8rem", borderRadius: "8px" }}
-    />
-    <button
-      onClick={addCreature}
-      style={{ marginTop: "1rem", width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}
-    >
-      Add Creature
-    </button>
-  </>
-));
-
 export default function App() {
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
@@ -54,6 +29,7 @@ export default function App() {
   const [newCreatureName, setNewCreatureName] = useState("");
   const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -91,21 +67,43 @@ export default function App() {
     const base = parseInt(vrestinX);
     const vrestinCounters = Math.ceil((base + getBaseCounterBonus()) * getMultiplier());
     const insectCounters = getEntryCounterBonus();
+
     const log = `[ETB Phase]\n✨ Vrestin enters with ${vrestinCounters} counters\n🐞 ${base} Insect tokens created (+${insectCounters})`;
+
     const newCreatures = [
-      ...(creatures.find((c) => c.name === "Vrestin") ? [] : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters }]),
-      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, base: [1, 1], counters: insectCounters }))
+      ...(creatures.find((c) => c.name === "Vrestin")
+        ? []
+        : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters }]),
+      ...Array(base).fill().map((_, i) => ({
+        name: `Insect ${i + 1}`,
+        base: [1, 1],
+        counters: insectCounters
+      }))
     ];
+
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log, ...prev]);
   };
 
-  const handleNameChange = useCallback((e) => {
-    const input = e.target.value;
-    setNewCreatureName(input);
-  }, []);
+  const updateCounter = (index, delta) => {
+    setCreatures((prev) =>
+      prev.map((c, i) =>
+        i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c
+      )
+    );
+  };
 
-  const addCreature = useCallback(() => {
+  const removeCreature = (index) => {
+    setCreatures((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const clearAllCreatures = () => {
+    setCreatures([]);
+  };
+
+  const clearLog = () => setResultLog([]);
+
+  const addCreature = () => {
     const name = newCreatureName.trim();
     if (!name) return;
     const data = creatureData[name.toLowerCase()];
@@ -115,88 +113,135 @@ export default function App() {
     setCreatures([...creatures, { name: newCreatureName, base, counters: final }]);
     setNewCreatureName("");
     setStartingCounters(0);
-  }, [newCreatureName, startingCounters, creatures]);
+    setSuggestions([]);
+  };
 
-  const updateCounter = (index, delta) => {
-    setCreatures((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c))
+  const handleNameChange = (e) => {
+    const input = e.target.value;
+    setNewCreatureName(input);
+    if (!input) return setSuggestions([]);
+    const matches = Object.keys(creatureData).filter((name) =>
+      name.includes(input.toLowerCase())
+    );
+    setSuggestions(matches);
+  };
+
+  const fillSuggestion = (name) => {
+    const displayName = name.replace(/\b\w/g, (c) => c.toUpperCase());
+    setNewCreatureName(displayName);
+    const data = creatureData[name];
+    if (data) setStartingCounters(data.counters);
+    setSuggestions([]);
+  };
+
+  const isMobile = window.innerWidth < 768;
+
+  const Section = ({ title, children }) => {
+    const [open, setOpen] = useState(!isMobile);
+    return (
+      <div style={{ marginBottom: "1.5rem" }}>
+        {isMobile && (
+          <button
+            onClick={() => setOpen((o) => !o)}
+            style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem", fontWeight: "bold" }}
+          >
+            {open ? `▼ ${title}` : `▶ ${title}`}
+          </button>
+        )}
+        {(!isMobile || open) && children}
+      </div>
     );
   };
 
-  const removeCreature = (index) => {
-    setCreatures((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const clearAllCreatures = () => setCreatures([]);
-  const clearLog = () => setResultLog([]);
-
   return (
-    <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white" }}>
+    <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <h2>Active Cards</h2>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
-        {supportCards.map((card) => (
-          <div
-            key={card.id}
-            onClick={() => toggleCard(card.id)}
-            style={{
-              padding: "0.6rem 1rem",
-              borderRadius: "6px",
-              backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#444",
-              cursor: "pointer"
-            }}
-          >
-            {card.name}
-          </div>
-        ))}
-      </div>
+      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+        <div>
+          <Section title="Select Active Cards">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+              {supportCards.map((card) => (
+                <div
+                  key={card.id}
+                  onClick={() => toggleCard(card.id)}
+                  style={{
+                    backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
+                    color: "white",
+                    padding: "0.8rem 1.2rem",
+                    borderRadius: "8px",
+                    cursor: "pointer"
+                  }}
+                >
+                  {card.name}
+                </div>
+              ))}
+            </div>
+          </Section>
 
-      <h2>Summon Vrestin</h2>
-      <input
-        type="number"
-        placeholder="X value"
-        value={vrestinX}
-        onChange={(e) => setVrestinX(e.target.value)}
-        style={{ width: "100%", padding: "0.6rem", marginBottom: "1rem" }}
-      />
-      <button onClick={calculateETB} style={{ width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white" }}>
-        Summon Vrestin
-      </button>
+          <Section title="Vrestin Entry">
+            <input
+              type="number"
+              placeholder="X value"
+              value={vrestinX}
+              onChange={(e) => setVrestinX(e.target.value)}
+              style={{ width: "100%", padding: "0.8rem", marginBottom: "1rem", borderRadius: "8px" }}
+            />
+            <button onClick={calculateETB} style={{ width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
+              Summon Vrestin
+            </button>
+          </Section>
 
-      <h2 style={{ marginTop: "2rem" }}>Add Creature</h2>
-      <CreatureInput
-        newCreatureName={newCreatureName}
-        startingCounters={startingCounters}
-        handleNameChange={handleNameChange}
-        setStartingCounters={setStartingCounters}
-        addCreature={addCreature}
-      />
-      <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", padding: "0.8rem", backgroundColor: "#800", color: "white" }}>
-        ❌ Clear All Creatures
-      </button>
-
-      <h2>Creatures</h2>
-      {creatures.map((c, i) => (
-        <div key={i} style={{ background: "#333", padding: "1rem", borderRadius: "6px", marginBottom: "0.5rem" }}>
-          {c.name}: {c.base[0]}/{c.base[1]} (+{c.counters}/+{c.counters})
-          <div>
-            <button onClick={() => updateCounter(i, 1)}>+1</button>
-            <button onClick={() => updateCounter(i, -1)} style={{ marginLeft: "0.5rem" }}>-1</button>
-            <button onClick={() => removeCreature(i)} style={{ marginLeft: "0.5rem" }}>🗑️</button>
-          </div>
+          <Section title="Add Creature">
+            <input
+              type="text"
+              placeholder="Creature Name"
+              value={newCreatureName}
+              onChange={handleNameChange}
+              style={{ width: "60%", marginRight: "2%", padding: "0.8rem", borderRadius: "8px" }}
+            />
+            <input
+              type="number"
+              placeholder="+1/+1 Counters"
+              value={startingCounters}
+              onChange={(e) => setStartingCounters(e.target.value)}
+              style={{ width: "35%", padding: "0.8rem", borderRadius: "8px" }}
+            />
+            <button onClick={addCreature} style={{ marginTop: "1rem", width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
+              Add Creature
+            </button>
+            <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", padding: "0.8rem", backgroundColor: "#800", color: "white", borderRadius: "8px" }}>
+              Clear All Creatures
+            </button>
+          </Section>
         </div>
-      ))}
 
-      <h2>Result Log</h2>
-      <textarea
-        readOnly
-        value={resultLog.join("\n-------------------\n")}
-        style={{ width: "100%", height: "200px", backgroundColor: "#222", color: "white", fontFamily: "monospace" }}
-      />
-      <button onClick={clearLog} style={{ width: "100%", marginTop: "0.5rem", padding: "0.8rem", backgroundColor: "#f44336", color: "white" }}>
-        Clear Log
-      </button>
+        <div>
+          <Section title="Creatures">
+            {creatures.map((c, i) => (
+              <div key={i} style={{ background: "#333", padding: "1rem", borderRadius: "8px", marginBottom: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>{c.name}: {c.base[0]}/{c.base[1]} (+{c.counters}/+{c.counters})</span>
+                <div>
+                  <button onClick={() => updateCounter(i, 1)} style={{ marginRight: "0.5rem" }}>+1</button>
+                  <button onClick={() => updateCounter(i, -1)} style={{ marginRight: "0.5rem" }}>-1</button>
+                  <button onClick={() => removeCreature(i)}>🗑️</button>
+                </div>
+              </div>
+            ))}
+          </Section>
+
+          <Section title="Result Log">
+            <textarea
+              readOnly
+              value={resultLog.join("\n-------------------\n")}
+              style={{ width: "100%", height: "150px", backgroundColor: "#222", color: "white", padding: "0.8rem", borderRadius: "8px", fontFamily: "monospace" }}
+            />
+            <button onClick={clearLog} style={{ width: "100%", marginTop: "0.5rem", padding: "0.8rem", backgroundColor: "#f44336", color: "white", borderRadius: "8px" }}>
+              Clear Log
+            </button>
+          </Section>
+        </div>
+      </div>
     </div>
   );
 }
