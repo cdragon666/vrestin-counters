@@ -30,13 +30,7 @@ export default function App() {
   const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const [rawNameInput, setRawNameInput] = useState("");
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -78,14 +72,8 @@ export default function App() {
     const log = `[ETB Phase]\n✨ Vrestin enters with ${vrestinCounters} counters\n🐞 ${base} Insect tokens created (+${insectCounters})`;
 
     const newCreatures = [
-      ...(creatures.find((c) => c.name === "Vrestin")
-        ? []
-        : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters }]),
-      ...Array(base).fill().map((_, i) => ({
-        name: `Insect ${i + 1}`,
-        base: [1, 1],
-        counters: insectCounters
-      }))
+      ...(creatures.find((c) => c.name === "Vrestin") ? [] : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters }]),
+      ...Array(base).fill().map((_, i) => ({ name: `Insect ${i + 1}`, base: [1, 1], counters: insectCounters }))
     ];
 
     setCreatures((prev) => [...prev, ...newCreatures]);
@@ -94,9 +82,7 @@ export default function App() {
 
   const updateCounter = (index, delta) => {
     setCreatures((prev) =>
-      prev.map((c, i) =>
-        i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c
-      )
+      prev.map((c, i) => (i === index ? { ...c, counters: Math.max(0, c.counters + delta) } : c))
     );
   };
 
@@ -123,21 +109,23 @@ export default function App() {
     setSuggestions([]);
   };
 
- const handleNameChange = (e) => {
-  const input = e.target.value;
-  setNewCreatureName(input);
+  const handleNameChange = (e) => {
+    const input = e.target.value;
+    setRawNameInput(input);
+    setNewCreatureName(input);
+  };
 
-  // Only update suggestions if input is longer than 1 character
-  if (input.length > 1) {
-    const matches = Object.keys(creatureData).filter((name) =>
-      name.includes(input.toLowerCase())
-    );
-    setSuggestions(matches);
-  } else {
-    if (input === "") setSuggestions([]);
-  }
-};
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!rawNameInput) return setSuggestions([]);
+      const matches = Object.keys(creatureData).filter((name) =>
+        name.includes(rawNameInput.toLowerCase())
+      );
+      setSuggestions(matches);
+    }, 200);
 
+    return () => clearTimeout(timeout);
+  }, [rawNameInput]);
 
   const fillSuggestion = (name) => {
     const displayName = name.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -147,6 +135,7 @@ export default function App() {
     setSuggestions([]);
   };
 
+  const isMobile = window.innerWidth < 768;
   const collapsibleSections = isMobile;
 
   const Section = ({ title, children }) => {
