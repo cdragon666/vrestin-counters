@@ -1,5 +1,6 @@
-import { useState, useEffect, memo } from "react";
+import { useState, memo } from "react";
 
+// Data for support cards and creatures
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
   { id: "branching_evolution", name: "Branching Evolution" },
@@ -22,18 +23,18 @@ const creatureData = {
   "springheart nantuko": { base: [2, 2], counters: 0 }
 };
 
-// Apply replacement effects in sequence and log each step
+// Applies replacement effects in order, returns final amount and log steps
 function applyReplacements(amount, selected, nameMap) {
   let current = amount;
   const logSteps = [];
-  // 'Plus one' effects
+  // +1 replacement effects
   ["hardened_scales", "conclave_mentor", "kami", "innkeeper"].forEach(id => {
     if (selected.includes(id)) {
       current += 1;
       logSteps.push(`${nameMap[id]} applies (+1) → ${current}`);
     }
   });
-  // 'Doubling' effects
+  // ×2 doubling effects
   ["branching_evolution", "innkeeper"].forEach(id => {
     if (selected.includes(id)) {
       current *= 2;
@@ -43,13 +44,23 @@ function applyReplacements(amount, selected, nameMap) {
   return { current, logSteps };
 }
 
-const nameMap = supportCards.reduce((m, c) => { m[c.id] = c.name; return m; }, {});
+const nameMap = supportCards.reduce((map, c) => { map[c.id] = c.name; return map; }, {});
 
+// Collapsible Section component
 const Section = memo(({ title, isOpen, onToggle, children }) => (
   <div style={{ marginBottom: '1rem', border: '1px solid #444', borderRadius: '6px', overflow: 'hidden' }}>
     <button
       onClick={onToggle}
-      style={{ width: '100%', background: '#222', color: 'white', padding: '0.6rem 1rem', textAlign: 'left', cursor: 'pointer', fontWeight: 'bold' }}
+      style={{
+        width: '100%',
+        background: '#222',
+        color: 'white',
+        padding: '0.6rem 1rem',
+        textAlign: 'left',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        border: 'none'
+      }}
     >
       {isOpen ? `▼ ${title}` : `▶ ${title}`}
     </button>
@@ -58,6 +69,7 @@ const Section = memo(({ title, isOpen, onToggle, children }) => (
 ));
 
 export default function App() {
+  // State
   const [selected, setSelected] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
   const [creatures, setCreatures] = useState([]);
@@ -73,121 +85,159 @@ export default function App() {
     'Result Log': true
   });
 
-  const toggleCard = id => setSelected(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
+  // Helpers
+  const toggleCard = id =>
+    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const has = id => selected.includes(id);
+  const logEvent = lines => setLog(prev => [lines.join('\n'), ...prev]);
 
-  const logEvent = (lines) => setLog(prev => [lines.join('\n'), ...prev]);
-
-  // ETB calculation with replacement pipeline
+  // Main ETB calculation
   const calculateETB = () => {
     const base = parseInt(vrestinX) || 0;
-    const { current: after, logSteps } = applyReplacements(base, selected, nameMap);
-    const lines = [`[ETB Phase]`, `Base: ${base}`].concat(
-      logSteps.map(s => `- ${s}`),
-      [`Result: Vrestin enters with ${after} counters`]
-    );
-    logEvent(lines);
+    const { current: after, logSteps: etbSteps } = applyReplacements(base, selected, nameMap);
+
+    const etbLog = ['[ETB Phase]', `Base: ${base}`,
+      ...etbSteps.map(s => `- ${s}`),
+      `Result: Vrestin enters with ${after} counters`
+    ];
+    logEvent(etbLog);
+
+    // Build new creatures list
     const newList = [];
-    if (!creatures.some(c=>c.name==='Vrestin')) newList.push({ name: 'Vrestin', base: [0,0], counters: after });
-    for (let i=1; i<=base; i++) newList.push({ name: `Insect ${i}`, base: [1,1], counters: applyReplacements(1, selected, nameMap).current });
+    if (!creatures.some(c => c.name === 'Vrestin')) {
+      newList.push({ name: 'Vrestin', base: [0, 0], counters: after });
+    }
+    for (let i = 1; i <= base; i++) {
+      const insectAmt = applyReplacements(1, selected, nameMap).current;
+      newList.push({ name: `Insect ${i}`, base: [1, 1], counters: insectAmt });
+    }
     setCreatures(prev => [...prev, ...newList]);
+
+    // Good-Fortune Unicorn trigger
+    if (has('unicorn')) {
+      newList.forEach(c => {
+        const { current, logSteps } = applyReplacements(1, selected, nameMap);
+        const triggerLog = [`[Unicorn Trigger on ${c.name}]`, 'Base: 1',
+          ...logSteps.map(s => `- ${s}`),
+          `Result: +${current} counter`
+        ];
+        logEvent(triggerLog);
+        c.counters += current;
+      });
+    }
+
+    // Duskshell Crawler trigger
+    if (has('crawler')) {
+      newList.forEach(c => {
+        const { current, logSteps } = applyReplacements(1, selected, nameMap);
+        const triggerLog = [`[Crawler Trigger on ${c.name}]`, 'Base: 1',
+          ...logSteps.map(s => `- ${s}`),
+          `Result: +${current} counter`
+        ];
+        logEvent(triggerLog);
+        c.counters += current;
+      });
+    }
   };
 
-  // Handle trigger: Good-Fortune Unicorn and Crawler ETB
-  useEffect(() => {
-    const unicorns = creatures.filter(c => c.name === 'Vrestin');
-    if (has('unicorn') && unicorns.length) {
-      const { current, logSteps } = applyReplacements(1, selected, nameMap);
-      const lines = [`[Unicorn Trigger]`, `Base: 1`].concat(
-        logSteps.map(s => `- ${s}`),
-        [`Result: +${current} counter`]
-      );
-      logEvent(lines);
-      setCreatures(prev => prev.map(c => c.name==='Vrestin' ? { ...c, counters: c.counters + current } : c));
-    }
-  }, [creatures]);
-
-  const updateCounter = (i, d) => setCreatures(prev => prev.map((c,idx)=> idx===i? {...c, counters: Math.max(0, c.counters+d)}:c));
-  const remove = i => setCreatures(prev => prev.filter((_,idx)=>idx!==i));
+  // Other handlers
+  const updateCounter = (i, d) =>
+    setCreatures(prev => prev.map((c, idx) => idx === i ? { ...c, counters: Math.max(0, c.counters + d) } : c));
+  const remove = i => setCreatures(prev => prev.filter((_, idx) => idx !== i));
   const clearAll = () => setCreatures([]);
   const clearLog = () => setLog([]);
 
   const addCreature = () => {
-    const n = newName.trim(); if(!n) return;
-    const d = creatureData[n.toLowerCase()];
-    const base = d? d.base: [0,0];
-    const counted = applyReplacements(d? d.counters: parseInt(newCounters)||0, selected, nameMap).current;
-    setCreatures(prev=>[...prev,{ name: n, base, counters: counted }]);
+    const name = newName.trim(); if (!name) return;
+    const data = creatureData[name.toLowerCase()];
+    const base = data ? data.base : [0, 0];
+    const amt = applyReplacements(data ? data.counters : parseInt(newCounters) || 0, selected, nameMap).current;
+    setCreatures(prev => [...prev, { name, base, counters: amt }]);
     setNewName(''); setNewCounters(0); setSuggestions([]);
   };
 
   const handleName = e => {
-    const v=e.target.value; setNewName(v);
-    if(!v) return setSuggestions([]);
-    setSuggestions(Object.keys(creatureData).filter(n=>n.includes(v.toLowerCase())));
+    const v = e.target.value; setNewName(v);
+    if (!v) return setSuggestions([]);
+    setSuggestions(Object.keys(creatureData).filter(n => n.includes(v.toLowerCase())));
   };
-  const choose = n=>{ setNewName(n); setNewCounters(creatureData[n].counters); setSuggestions([]); };
+  const choose = n => { setNewName(n); setNewCounters(creatureData[n].counters); setSuggestions([]); };
 
   return (
-    <div style={{ padding:'1rem', background:'#111', color:'white', fontFamily:'sans-serif' }}>
-      <h1 style={{ textAlign:'center' }}>Counter Tracker</h1>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
+    <div style={{ padding: '1rem', background: '#111', color: 'white', fontFamily: 'Arial, sans-serif' }}>
+      <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>Counter Tracker</h1>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        {/* Left column */}
         <div>
-          {['Select Active Cards','Vrestin Entry','Add Creature'].map(title=> (
-            <Section key={title}
+          {['Select Active Cards','Vrestin Entry','Add Creature'].map(title => (
+            <Section
+              key={title}
               title={title}
               isOpen={sections[title]}
-              onToggle={()=> setSections(prev=>({...prev,[title]:!prev[title]}))}
+              onToggle={() => setSections(prev => ({ ...prev, [title]: !prev[title] }))}
             >
-              {title==='Select Active Cards' && (
-                <div style={{ display:'flex', flexWrap:'wrap', gap:'0.5rem' }}>
-                  {supportCards.map(card=>(
-                    <div key={card.id} onClick={()=>toggleCard(card.id)}
-                      style={{ padding:'0.5rem 1rem', background: has(card.id)?'#4caf50':'#333', borderRadius:'4px', cursor:'pointer' }}>
+              {title === 'Select Active Cards' && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {supportCards.map(card => (
+                    <div key={card.id} onClick={() => toggleCard(card.id)}
+                      style={{ padding: '0.5rem 1rem', background: has(card.id) ? '#4caf50' : '#333', borderRadius: '4px', cursor: 'pointer' }}>
                       {card.name}
                     </div>
                   ))}
                 </div>
               )}
-              {title==='Vrestin Entry' && (
+              {title === 'Vrestin Entry' && (
                 <>
-                  <input type='number' placeholder='X' value={vrestinX}
-                    onChange={e=>setVrestinX(e.target.value)} style={{ width:'100%', marginBottom:'0.5rem' }} />
-                  <button onClick={calculateETB} style={{ width:'100%' }}>Summon</button>
+                  <input type='number' placeholder='X value' value={vrestinX}
+                    onChange={e => setVrestinX(e.target.value)}
+                    style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }} />
+                  <button onClick={calculateETB} style={{ width: '100%', padding: '0.5rem' }}>
+                    Summon Vrestin
+                  </button>
                 </>
               )}
-              {title==='Add Creature' && (
+              {title === 'Add Creature' && (
                 <>
-                  <input type='text' placeholder='Name' value={newName} onChange={handleName} style={{ width:'65%', marginRight:'2%' }} />
-                  <input type='number' placeholder='+1/+1' value={newCounters} onChange={e=>setNewCounters(e.target.value)} style={{ width:'30%' }} />
-                  <button onClick={addCreature} style={{ width:'100%', marginTop:'0.5rem' }}>Add Creature</button>
-                  <button onClick={clearAll} style={{ width:'100%', marginTop:'0.3rem' }}>Clear All</button>
+                  <input type='text' placeholder='Creature Name' value={newName} onChange={handleName}
+                    style={{ width: '60%', marginRight: '2%', padding: '0.5rem' }} />
+                  <input type='number' placeholder='+1/+1 counters' value={newCounters} onChange={e => setNewCounters(e.target.value)}
+                    style={{ width: '35%', padding: '0.5rem' }} />
+                  <button onClick={addCreature} style={{ width: '100%', marginTop: '0.5rem', padding: '0.5rem' }}>
+                    Add Creature
+                  </button>
+                  <button onClick={clearAll} style={{ width: '100%', marginTop: '0.3rem', padding: '0.5rem' }}>
+                    Clear All Creatures
+                  </button>
                 </>
               )}
             </Section>
           ))}
         </div>
+        {/* Right column */}
         <div>
-          {['Creatures','Result Log'].map(title=> (
-            <Section key={title}
+          {['Creatures','Result Log'].map(title => (
+            <Section
+              key={title}
               title={title}
               isOpen={sections[title]}
-              onToggle={()=> setSections(prev=>({...prev,[title]:!prev[title]}))}
+              onToggle={() => setSections(prev => ({ ...prev, [title]: !prev[title] }))}
             >
-              {title==='Creatures' && creatures.map((c,i)=>(
-                <div key={i} style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.3rem', background:'#222', padding:'0.5rem' }}>
+              {title === 'Creatures' && creatures.map((c, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', background: '#222', padding: '0.5rem', marginBottom: '0.3rem' }}>
                   <span>{c.name}: {c.base[0]}/{c.base[1]} (+{c.counters})</span>
                   <div>
-                    <button onClick={()=>updateCounter(i,1)}>+1</button>
-                    <button onClick={()=>updateCounter(i,-1)}>-1</button>
-                    <button onClick={()=>remove(i)}>🗑️</button>
+                    <button onClick={() => updateCounter(i, 1)} style={{ marginRight: '0.3rem' }}>+1</button>
+                    <button onClick={() => updateCounter(i, -1)} style={{ marginRight: '0.3rem' }}>-1</button>
+                    <button onClick={() => remove(i)}>🗑️</button>
                   </div>
                 </div>
               ))}
-              {title==='Result Log' && (
+              {title === 'Result Log' && (
                 <>
-                  <textarea readOnly value={log.join('\n-------------------\n')} style={{ width:'100%', height:'150px', background:'#111', color:'white' }} />
-                  <button onClick={clearLog} style={{ width:'100%', marginTop:'0.3rem' }}>Clear Log</button>
+                  <textarea readOnly value={log.join('\n-------------------\n')} style={{ width: '100%', height: '150px', background: '#111', color: 'white', padding: '0.5rem' }} />
+                  <button onClick={clearLog} style={{ width: '100%', marginTop: '0.3rem', padding: '0.5rem' }}>
+                    Clear Log
+                  </button>
                 </>
               )}
             </Section>
