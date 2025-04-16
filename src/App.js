@@ -123,15 +123,21 @@ export default function App() {
     setSuggestions([]);
   };
 
-  const handleNameChange = (e) => {
-    const input = e.target.value;
-    setNewCreatureName(input);
-    if (!input) return setSuggestions([]);
+ const handleNameChange = (e) => {
+  const input = e.target.value;
+  setNewCreatureName(input);
+
+  // Only update suggestions if input is longer than 1 character
+  if (input.length > 1) {
     const matches = Object.keys(creatureData).filter((name) =>
       name.includes(input.toLowerCase())
     );
     setSuggestions(matches);
-  };
+  } else {
+    if (input === "") setSuggestions([]);
+  }
+};
+
 
   const fillSuggestion = (name) => {
     const displayName = name.replace(/\b\w/g, (c) => c.toUpperCase());
