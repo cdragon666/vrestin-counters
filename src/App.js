@@ -30,6 +30,13 @@ export default function App() {
   const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -134,7 +141,6 @@ export default function App() {
     setSuggestions([]);
   };
 
-  const isMobile = window.innerWidth < 768;
   const collapsibleSections = isMobile;
 
   const Section = ({ title, children }) => {
