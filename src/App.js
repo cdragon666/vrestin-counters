@@ -10,7 +10,6 @@ const supportCards = [
   { id: "anduril", name: "Andúril Equipped" },
   { id: "citys_blessing", name: "City's Blessing (10+ permanents)" },
   { id: "unicorn", name: "Good-Fortune Unicorn (ETB trigger)" },
-  { id: "crawler", name: "Duskshell Crawler (ETB trigger)" },
   { id: "hornbeetle", name: "Iridescent Hornbeetle (token maker)" }
 ];
 
@@ -30,6 +29,7 @@ export default function App() {
   const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [collapsedSections, setCollapsedSections] = useState({});
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -39,54 +39,52 @@ export default function App() {
 
   const has = (id) => selectedCards.includes(id);
 
-  const getOrderedEffects = () => [
-    has("hardened_scales") && { label: "Hardened Scales", type: "add", value: 1 },
-    has("conclave_mentor") && { label: "Conclave Mentor", type: "add", value: 1 },
-    has("kami") && { label: "Kami of Whispered Hopes", type: "add", value: 1 },
-    has("branching_evolution") && { label: "Branching Evolution", type: "multiply", value: 2 },
-    has("innkeeper") && { label: "Innkeeper's Talent", type: "multiply", value: 2 }
-  ].filter(Boolean);
-
-  const applyEffects = (base) => {
+  const getReplacementCounterStack = (base) => {
+    let steps = [];
     let value = base;
-    let log = `Base: ${value}`;
-    for (const effect of getOrderedEffects()) {
-      if (effect.type === "add") {
-        value += effect.value;
-        log += `\n- ${effect.label} applies (+${effect.value}) → ${value}`;
-      } else if (effect.type === "multiply") {
-        value *= effect.value;
-        log += `\n- ${effect.label} applies (×${effect.value}) → ${value}`;
-      }
-    }
-    log += `\nResult: +${value} counter`;
-    return { value, log };
+    const step = (label, amount) => {
+      value += amount;
+      steps.push(`${label} adds +${amount} → ${value}`);
+    };
+    const double = (label) => {
+      value *= 2;
+      steps.push(`${label} doubles → ${value}`);
+    };
+
+    if (has("hardened_scales")) step("Hardened Scales", 1);
+    if (has("conclave_mentor")) step("Conclave Mentor", 1);
+    if (has("kami")) step("Kami of Whispered Hopes", 1);
+    if (has("ozolith")) step("Ozolith", 1);
+    if (has("innkeeper")) step("Innkeeper's Talent", 1);
+    if (has("branching_evolution")) double("Branching Evolution");
+    if (has("innkeeper")) double("Innkeeper's Talent");
+    return [value, steps];
   };
 
   const calculateETB = () => {
     const base = parseInt(vrestinX);
-    const { value: vrestinCounters, log: vLog } = applyEffects(base);
-
-    const logs = ["[Vrestin Entry Replacement Stack]", vLog];
-
-    const newCreatures = [
-      ...(creatures.find((c) => c.name === "Vrestin") ? [] : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters }]),
-      ...Array(base).fill().map((_, i) => {
-        const { value, log } = applyEffects(1);
-        logs.push(`[Good-Fortune Unicorn Trigger on Insect ${i + 1}]\n` + log);
-        return {
-          name: `Insect ${i + 1}`,
-          base: [1, 1],
-          counters: value
-        };
-      })
+    const [counterValue, steps] = getReplacementCounterStack(base);
+    const log = [
+      `[Vrestin Entry]`,
+      `Vrestin enters for X = ${base}`,
+      `Triggers:`,
+      ...steps.map((s) => `- ${s}`),
+      `Result: Vrestin enters with ${counterValue} +1/+1 counters`
     ];
 
-    const { value: unicornBuff, log: unicornLog } = applyEffects(1);
-    logs.push(`[Good-Fortune Unicorn Trigger on Vrestin]\n` + unicornLog);
+    const newCreatures = [
+      ...(creatures.find((c) => c.name === "Vrestin")
+        ? []
+        : [{ name: "Vrestin", base: [0, 0], counters: counterValue }]),
+      ...Array(base).fill().map((_, i) => ({
+        name: `Insect ${i + 1}`,
+        base: [1, 1],
+        counters: has("unicorn") ? 1 : 0
+      }))
+    ];
 
     setCreatures((prev) => [...prev, ...newCreatures]);
-    setResultLog((prev) => [...logs.reverse(), ...prev]);
+    setResultLog((prev) => [log.join("\n"), ...prev]);
   };
 
   const updateCounter = (index, delta) => {
@@ -113,8 +111,8 @@ export default function App() {
     const data = creatureData[name.toLowerCase()];
     const base = data ? data.base : [0, 0];
     const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
-    const { value: finalCounters } = applyEffects(baseCounters);
-    setCreatures([...creatures, { name: newCreatureName, base, counters: finalCounters }]);
+    const final = baseCounters;
+    setCreatures([...creatures, { name: newCreatureName, base, counters: final }]);
     setNewCreatureName("");
     setStartingCounters(0);
     setSuggestions([]);
@@ -138,33 +136,25 @@ export default function App() {
     setSuggestions([]);
   };
 
-  const isMobile = window.innerWidth < 768;
-  const collapsibleSections = true;
-
-  const Section = ({ title, children }) => {
-    const [open, setOpen] = useState(!collapsibleSections);
-    return (
-      <div style={{ marginBottom: "1.5rem" }}>
-        {collapsibleSections && (
-          <button
-            onClick={() => setOpen((o) => !o)}
-            style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem", fontWeight: "bold" }}
-          >
-            {open ? `▼ ${title}` : `▶ ${title}`}
-          </button>
-        )}
-        {(!collapsibleSections || open) && children}
-      </div>
-    );
+  const toggleCollapse = (section) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
+
+  const isCollapsed = (section) => collapsedSections[section];
 
   return (
     <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
         <div>
-          <Section title="Select Active Cards">
+          <button onClick={() => toggleCollapse("activeCards")}>
+            {isCollapsed("activeCards") ? "▶" : "▼"} Active Cards
+          </button>
+          {!isCollapsed("activeCards") && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
               {supportCards.map((card) => (
                 <div
@@ -172,8 +162,7 @@ export default function App() {
                   onClick={() => toggleCard(card.id)}
                   style={{
                     backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
-                    color: "white",
-                    padding: "0.8rem 1.2rem",
+                    padding: "0.8rem",
                     borderRadius: "8px",
                     cursor: "pointer"
                   }}
@@ -182,69 +171,63 @@ export default function App() {
                 </div>
               ))}
             </div>
-          </Section>
+          )}
 
-          <Section title="Vrestin Entry">
-            <input
-              type="number"
-              placeholder="X value"
-              value={vrestinX}
-              onChange={(e) => setVrestinX(e.target.value)}
-              style={{ width: "100%", padding: "0.8rem", marginBottom: "1rem", borderRadius: "8px" }}
-            />
-            <button onClick={calculateETB} style={{ width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
-              Summon Vrestin
-            </button>
-          </Section>
+          <button onClick={() => toggleCollapse("vrestin")}> {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry </button>
+          {!isCollapsed("vrestin") && (
+            <>
+              <input
+                type="number"
+                value={vrestinX}
+                onChange={(e) => setVrestinX(e.target.value)}
+                placeholder="X Value"
+                style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
+              />
+              <button onClick={calculateETB}>Summon Vrestin</button>
+            </>
+          )}
 
-          <Section title="Add Creature">
-            <input
-              type="text"
-              placeholder="Creature Name"
-              value={newCreatureName}
-              onChange={handleNameChange}
-              style={{ width: "60%", marginRight: "2%", padding: "0.8rem", borderRadius: "8px" }}
-            />
-            <input
-              type="number"
-              placeholder="+1/+1 Counters"
-              value={startingCounters}
-              onChange={(e) => setStartingCounters(e.target.value)}
-              style={{ width: "35%", padding: "0.8rem", borderRadius: "8px" }}
-            />
-            <button onClick={addCreature} style={{ marginTop: "1rem", width: "100%", padding: "0.8rem", backgroundColor: "#4CAF50", color: "white", borderRadius: "8px" }}>
-              Add Creature
-            </button>
-            <button onClick={clearAllCreatures} style={{ marginTop: "0.5rem", width: "100%", padding: "0.8rem", backgroundColor: "#800", color: "white", borderRadius: "8px" }}>
-              Clear All Creatures
-            </button>
-          </Section>
+          <button onClick={() => toggleCollapse("addCreature")}> {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature </button>
+          {!isCollapsed("addCreature") && (
+            <>
+              <input
+                type="text"
+                placeholder="Creature Name"
+                value={newCreatureName}
+                onChange={handleNameChange}
+              />
+              <input
+                type="number"
+                value={startingCounters}
+                onChange={(e) => setStartingCounters(e.target.value)}
+                placeholder="+1/+1 Counters"
+              />
+              <button onClick={addCreature}>Add</button>
+              <button onClick={clearAllCreatures}>Clear All Creatures</button>
+            </>
+          )}
         </div>
 
         <div>
-          <Section title="Creatures">
-            {creatures.map((c, i) => (
-              <div key={i} style={{ background: "#333", padding: "1rem", borderRadius: "8px", marginBottom: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>{c.name}: {c.base[0]}/{c.base[1]} (+{c.counters}/+{c.counters})</span>
-                <div>
-                  <button onClick={() => updateCounter(i, 1)} style={{ marginRight: "0.5rem" }}>+1</button>
-                  <button onClick={() => updateCounter(i, -1)} style={{ marginRight: "0.5rem" }}>-1</button>
-                  <button onClick={() => removeCreature(i)}>🗑️</button>
-                </div>
+          <h2>Creatures</h2>
+          {creatures.map((c, i) => (
+            <div key={i} style={{ background: "#333", padding: "0.5rem", marginBottom: "0.5rem", borderRadius: "8px" }}>
+              {c.name}: {c.base[0]}/{c.base[1]} (+{c.counters}/+{c.counters})
+              <div>
+                <button onClick={() => updateCounter(i, 1)}>+1</button>
+                <button onClick={() => updateCounter(i, -1)}>-1</button>
+                <button onClick={() => removeCreature(i)}>🗑️</button>
               </div>
-            ))}
-          </Section>
+            </div>
+          ))}
 
-          <Section title="Result Log">
-            <textarea
-              readOnly
-              value={resultLog.join("\n-------------------\n")}
-              style={{ width: "100%", height: "150px", backgroundColor: "#222", color: "white", padding: "0.8rem", borderRadius: "8px", fontFamily: "monospace" }}
-            />
-            <button onClick={clearLog} style={{ width: "100%", marginTop: "0.5rem", padding: "0.8rem", backgroundColor: "#f44336", color: "white", borderRadius: "8px" }}>
-              Clear Log
-            </button>
-          </Section>
+          <h2>Result Log</h2>
+          <textarea
+            readOnly
+            value={resultLog.join("\n-------------------\n")}
+            style={{ width: "100%", height: "200px", backgroundColor: "#111", color: "white", padding: "0.5rem", borderRadius: "8px" }}
+          />
+          <button onClick={clearLog}>Clear Log</button>
         </div>
       </div>
     </div>
