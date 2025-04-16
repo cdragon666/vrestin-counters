@@ -1,6 +1,5 @@
 import { useState, useEffect, memo } from "react";
 
-// Card and creature data
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
   { id: "branching_evolution", name: "Branching Evolution" },
@@ -10,9 +9,9 @@ const supportCards = [
   { id: "conclave_mentor", name: "Conclave Mentor" },
   { id: "anduril", name: "Andúril Equipped" },
   { id: "citys_blessing", name: "City's Blessing (10+ permanents)" },
-  { id: "unicorn", name: "Good-Fortune Unicorn (ETB trigger)" },
-  { id: "crawler", name: "Duskshell Crawler (ETB trigger)" },
-  { id: "hornbeetle", name: "Iridescent Hornbeetle (token maker)" }
+  { id: "unicorn", name: "Good-Fortune Unicorn" },
+  { id: "crawler", name: "Duskshell Crawler" },
+  { id: "hornbeetle", name: "Iridescent Hornbeetle" }
 ];
 
 const creatureData = {
@@ -23,198 +22,172 @@ const creatureData = {
   "springheart nantuko": { base: [2, 2], counters: 0 }
 };
 
-// Section component for collapsible panels
+// Apply replacement effects in sequence and log each step
+function applyReplacements(amount, selected, nameMap) {
+  let current = amount;
+  const logSteps = [];
+  // 'Plus one' effects
+  ["hardened_scales", "conclave_mentor", "kami", "innkeeper"].forEach(id => {
+    if (selected.includes(id)) {
+      current += 1;
+      logSteps.push(`${nameMap[id]} applies (+1) → ${current}`);
+    }
+  });
+  // 'Doubling' effects
+  ["branching_evolution", "innkeeper"].forEach(id => {
+    if (selected.includes(id)) {
+      current *= 2;
+      logSteps.push(`${nameMap[id]} applies (×2) → ${current}`);
+    }
+  });
+  return { current, logSteps };
+}
+
+const nameMap = supportCards.reduce((m, c) => { m[c.id] = c.name; return m; }, {});
+
 const Section = memo(({ title, isOpen, onToggle, children }) => (
-  <div style={{ marginBottom: "1.5rem", border: "1px solid #333", borderRadius: "6px", overflow: "hidden" }}>
+  <div style={{ marginBottom: '1rem', border: '1px solid #444', borderRadius: '6px', overflow: 'hidden' }}>
     <button
       onClick={onToggle}
-      style={{
-        width: "100%",
-        textAlign: "left",
-        background: "#333",
-        color: "white",
-        padding: "0.6rem 1rem",
-        fontWeight: "bold",
-        cursor: "pointer",
-        borderBottom: "1px solid #222"
-      }}
+      style={{ width: '100%', background: '#222', color: 'white', padding: '0.6rem 1rem', textAlign: 'left', cursor: 'pointer', fontWeight: 'bold' }}
     >
       {isOpen ? `▼ ${title}` : `▶ ${title}`}
     </button>
-    {isOpen && <div style={{ padding: "1rem" }}>{children}</div>}
+    {isOpen && <div style={{ padding: '1rem' }}>{children}</div>}
   </div>
 ));
 
 export default function App() {
-  // State
-  const [selectedCards, setSelectedCards] = useState([]);
+  const [selected, setSelected] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
   const [creatures, setCreatures] = useState([]);
-  const [newCreatureName, setNewCreatureName] = useState("");
-  const [startingCounters, setStartingCounters] = useState(0);
-  const [resultLog, setResultLog] = useState([]);
+  const [newName, setNewName] = useState('');
+  const [newCounters, setNewCounters] = useState(0);
+  const [log, setLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  // Keep track of which sections are open
-  const [openSections, setOpenSections] = useState({
-    "Select Active Cards": true,
-    "Vrestin Entry": true,
-    "Add Creature": true,
-    "Creatures": true,
-    "Result Log": true
+  const [sections, setSections] = useState({
+    'Select Active Cards': true,
+    'Vrestin Entry': true,
+    'Add Creature': true,
+    'Creatures': true,
+    'Result Log': true
   });
 
-  // Handlers
-  const toggleCard = (id) => setSelectedCards(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
-  const has = (id) => selectedCards.includes(id);
+  const toggleCard = id => setSelected(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
+  const has = id => selected.includes(id);
 
-  const getBaseCounterBonus = () => {
-    let bonus = 0;
-    if (has("hardened_scales")) bonus++;
-    if (has("conclave_mentor")) bonus++;
-    if (has("ozolith")) bonus++;
-    return bonus;
-  };
+  const logEvent = (lines) => setLog(prev => [lines.join('\n'), ...prev]);
 
-  const getMultiplier = () => {
-    let mult = 1;
-    if (has("branching_evolution")) mult *= 2;
-    if (has("kami")) mult *= 2;
-    if (has("innkeeper")) mult *= 2;
-    return mult;
-  };
-
-  const getEntryCounterBonus = () => {
-    let b = 0;
-    if (has("unicorn")) b++;
-    if (has("crawler")) b++;
-    b += getBaseCounterBonus();
-    return Math.ceil(b * getMultiplier());
-  };
-
+  // ETB calculation with replacement pipeline
   const calculateETB = () => {
     const base = parseInt(vrestinX) || 0;
-    const vCounters = Math.ceil((base + getBaseCounterBonus()) * getMultiplier());
-    const insectCounters = getEntryCounterBonus();
-    const log = `[ETB Phase]\n✨ Vrestin enters with ${vCounters} counters\n🐞 ${base} Insect tokens created (+${insectCounters})`;
-    const newC = [
-      ...(creatures.some(c => c.name === "Vrestin") ? [] : [{ name: "Vrestin", base: [0,0], counters: vCounters }]),
-      ...Array(base).fill().map((_,i) => ({ name: `Insect ${i+1}`, base:[1,1], counters: insectCounters }))
-    ];
-    setCreatures(prev => [...prev, ...newC]);
-    setResultLog(prev => [log, ...prev]);
+    const { current: after, logSteps } = applyReplacements(base, selected, nameMap);
+    const lines = [`[ETB Phase]`, `Base: ${base}`].concat(
+      logSteps.map(s => `- ${s}`),
+      [`Result: Vrestin enters with ${after} counters`]
+    );
+    logEvent(lines);
+    const newList = [];
+    if (!creatures.some(c=>c.name==='Vrestin')) newList.push({ name: 'Vrestin', base: [0,0], counters: after });
+    for (let i=1; i<=base; i++) newList.push({ name: `Insect ${i}`, base: [1,1], counters: applyReplacements(1, selected, nameMap).current });
+    setCreatures(prev => [...prev, ...newList]);
   };
 
-  const updateCounter = (i, delta) => setCreatures(prev => prev.map((c,idx) => idx===i ? { ...c, counters: Math.max(0,c.counters+delta) } : c));
-  const removeCreature = i => setCreatures(prev => prev.filter((_,idx)=>idx!==i));
-  const clearAllCreatures = () => setCreatures([]);
-  const clearLog = () => setResultLog([]);
+  // Handle trigger: Good-Fortune Unicorn and Crawler ETB
+  useEffect(() => {
+    const unicorns = creatures.filter(c => c.name === 'Vrestin');
+    if (has('unicorn') && unicorns.length) {
+      const { current, logSteps } = applyReplacements(1, selected, nameMap);
+      const lines = [`[Unicorn Trigger]`, `Base: 1`].concat(
+        logSteps.map(s => `- ${s}`),
+        [`Result: +${current} counter`]
+      );
+      logEvent(lines);
+      setCreatures(prev => prev.map(c => c.name==='Vrestin' ? { ...c, counters: c.counters + current } : c));
+    }
+  }, [creatures]);
+
+  const updateCounter = (i, d) => setCreatures(prev => prev.map((c,idx)=> idx===i? {...c, counters: Math.max(0, c.counters+d)}:c));
+  const remove = i => setCreatures(prev => prev.filter((_,idx)=>idx!==i));
+  const clearAll = () => setCreatures([]);
+  const clearLog = () => setLog([]);
 
   const addCreature = () => {
-    const name = newCreatureName.trim(); if(!name) return;
-    const data = creatureData[name.toLowerCase()];
-    const base = data ? data.base : [0,0];
-    const baseC = data ? data.counters : parseInt(startingCounters)||0;
-    const final = Math.ceil((baseC + getBaseCounterBonus()) * getMultiplier());
-    setCreatures(prev=>[...prev,{name,base,counters:final}]);
-    setNewCreatureName(""); setStartingCounters(0); setSuggestions([]);
+    const n = newName.trim(); if(!n) return;
+    const d = creatureData[n.toLowerCase()];
+    const base = d? d.base: [0,0];
+    const counted = applyReplacements(d? d.counters: parseInt(newCounters)||0, selected, nameMap).current;
+    setCreatures(prev=>[...prev,{ name: n, base, counters: counted }]);
+    setNewName(''); setNewCounters(0); setSuggestions([]);
   };
 
-  const handleNameChange = e => {
-    const v = e.target.value;
-    setNewCreatureName(v);
+  const handleName = e => {
+    const v=e.target.value; setNewName(v);
     if(!v) return setSuggestions([]);
     setSuggestions(Object.keys(creatureData).filter(n=>n.includes(v.toLowerCase())));
   };
-  const fillSuggestion = name => {
-    setNewCreatureName(name.replace(/\b\w/g,c=>c.toUpperCase()));
-    const d = creatureData[name]; if(d) setStartingCounters(d.counters);
-    setSuggestions([]);
-  };
+  const choose = n=>{ setNewName(n); setNewCounters(creatureData[n].counters); setSuggestions([]); };
 
-  // Render
   return (
-    <div style={{padding:"1rem",backgroundColor:"#1a1a1a",color:"white",fontFamily:"Arial,sans-serif"}}>
-      <h1 style={{textAlign:"center",marginBottom:"1.5rem"}}>Counter Tracker</h1>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1.5rem"}}>
-        {/* Left Column */}
+    <div style={{ padding:'1rem', background:'#111', color:'white', fontFamily:'sans-serif' }}>
+      <h1 style={{ textAlign:'center' }}>Counter Tracker</h1>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
         <div>
-          {Object.keys(openSections).slice(0,3).map(title=> (
-            <Section
-              key={title}
+          {['Select Active Cards','Vrestin Entry','Add Creature'].map(title=> (
+            <Section key={title}
               title={title}
-              isOpen={openSections[title]}
-              onToggle={()=>setOpenSections(prev=>({...prev,[title]:!prev[title]}))}
+              isOpen={sections[title]}
+              onToggle={()=> setSections(prev=>({...prev,[title]:!prev[title]}))}
             >
-              {title === "Select Active Cards" && (
-                <div style={{display:"flex",flexWrap:"wrap",gap:"0.5rem"}}>
+              {title==='Select Active Cards' && (
+                <div style={{ display:'flex', flexWrap:'wrap', gap:'0.5rem' }}>
                   {supportCards.map(card=>(
-                    <div
-                      key={card.id}
-                      onClick={()=>toggleCard(card.id)}
-                      style={{backgroundColor:has(card.id)?"#4caf50":"#2e2e2e",color:"white",padding:"0.5rem 1rem",borderRadius:"6px",cursor:"pointer"}}
-                    >{card.name}</div>
+                    <div key={card.id} onClick={()=>toggleCard(card.id)}
+                      style={{ padding:'0.5rem 1rem', background: has(card.id)?'#4caf50':'#333', borderRadius:'4px', cursor:'pointer' }}>
+                      {card.name}
+                    </div>
                   ))}
                 </div>
               )}
-              {title === "Vrestin Entry" && (
-                <>  
-                  <input type="number" placeholder="X value" value={vrestinX}
-                    onChange={e=>setVrestinX(e.target.value)}
-                    style={{width:"100%",padding:"0.5rem",marginBottom:"0.5rem",borderRadius:"6px"}}
-                  />
-                  <button onClick={calculateETB} style={{width:"100%",padding:"0.5rem",backgroundColor:"#4CAF50",color:"white",borderRadius:"6px"}}>
-                    Summon Vrestin
-                  </button>
+              {title==='Vrestin Entry' && (
+                <>
+                  <input type='number' placeholder='X' value={vrestinX}
+                    onChange={e=>setVrestinX(e.target.value)} style={{ width:'100%', marginBottom:'0.5rem' }} />
+                  <button onClick={calculateETB} style={{ width:'100%' }}>Summon</button>
                 </>
               )}
-              {title === "Add Creature" && (
+              {title==='Add Creature' && (
                 <>
-                  <input type="text" placeholder="Creature Name" value={newCreatureName}
-                    onChange={handleNameChange}
-                    style={{width:"60%",marginRight:"2%",padding:"0.5rem",borderRadius:"6px"}}
-                  />
-                  <input type="number" placeholder="Counters" value={startingCounters}
-                    onChange={e=>setStartingCounters(e.target.value)}
-                    style={{width:"35%",padding:"0.5rem",borderRadius:"6px"}}
-                  />
-                  <button onClick={addCreature} style={{marginTop:"0.5rem",width:"100%",padding:"0.5rem",backgroundColor:"#4CAF50",color:"white",borderRadius:"6px"}}>
-                    Add Creature
-                  </button>
-                  <button onClick={clearAllCreatures} style={{marginTop:"0.3rem",width:"100%",padding:"0.5rem",backgroundColor:"#800",color:"white",borderRadius:"6px"}}>
-                    Clear All Creatures
-                  </button>
+                  <input type='text' placeholder='Name' value={newName} onChange={handleName} style={{ width:'65%', marginRight:'2%' }} />
+                  <input type='number' placeholder='+1/+1' value={newCounters} onChange={e=>setNewCounters(e.target.value)} style={{ width:'30%' }} />
+                  <button onClick={addCreature} style={{ width:'100%', marginTop:'0.5rem' }}>Add Creature</button>
+                  <button onClick={clearAll} style={{ width:'100%', marginTop:'0.3rem' }}>Clear All</button>
                 </>
               )}
             </Section>
           ))}
         </div>
-        {/* Right Column */}
         <div>
-          {Object.keys(openSections).slice(3).map(title=> (
-            <Section
-              key={title}
+          {['Creatures','Result Log'].map(title=> (
+            <Section key={title}
               title={title}
-              isOpen={openSections[title]}
-              onToggle={()=>setOpenSections(prev=>({...prev,[title]:!prev[title]}))}
+              isOpen={sections[title]}
+              onToggle={()=> setSections(prev=>({...prev,[title]:!prev[title]}))}
             >
-              {title === "Creatures" && creatures.map((c,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#333",padding:"0.5rem",borderRadius:"6px",marginBottom:"0.3rem"}}>
+              {title==='Creatures' && creatures.map((c,i)=>(
+                <div key={i} style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.3rem', background:'#222', padding:'0.5rem' }}>
                   <span>{c.name}: {c.base[0]}/{c.base[1]} (+{c.counters})</span>
                   <div>
-                    <button onClick={()=>updateCounter(i,1)} style={{marginRight:"0.3rem"}}>+1</button>
-                    <button onClick={()=>updateCounter(i,-1)} style={{marginRight:"0.3rem"}}>-1</button>
-                    <button onClick={()=>removeCreature(i)}>🗑️</button>
+                    <button onClick={()=>updateCounter(i,1)}>+1</button>
+                    <button onClick={()=>updateCounter(i,-1)}>-1</button>
+                    <button onClick={()=>remove(i)}>🗑️</button>
                   </div>
                 </div>
               ))}
-              {title === "Result Log" && (
+              {title==='Result Log' && (
                 <>
-                  <textarea readOnly value={resultLog.join("\n-------------------\n")}
-                    style={{width:"100%",height:"150px",backgroundColor:"#222",color:"white",padding:"0.5rem",borderRadius:"6px",fontFamily:"monospace"}}
-                  />
-                  <button onClick={clearLog} style={{width:"100%",marginTop:"0.3rem",padding:"0.5rem",backgroundColor:"#f44336",color:"white",borderRadius:"6px"}}>
-                    Clear Log
-                  </button>
+                  <textarea readOnly value={log.join('\n-------------------\n')} style={{ width:'100%', height:'150px', background:'#111', color:'white' }} />
+                  <button onClick={clearLog} style={{ width:'100%', marginTop:'0.3rem' }}>Clear Log</button>
                 </>
               )}
             </Section>
