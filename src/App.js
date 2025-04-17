@@ -165,7 +165,7 @@ export default function App() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
         <div>
-          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("activeCards")}>{isCollapsed("activeCards") ? "▶" : "▼"} Active Cards</button>
+          <button style={{ marginBottom: "1rem", marginTop: "1rem" }} onClick={() => toggleCollapse("activeCards")}>{isCollapsed("activeCards") ? "▶" : "▼"} Active Cards</button>
           {!isCollapsed("activeCards") && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
               {supportCards.map((card) => (
@@ -185,7 +185,7 @@ export default function App() {
             </div>
           )}
 
-          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("vrestin")}> {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry </button>
+          <button style={{ marginBottom: "1rem", marginTop: "1rem" }} onClick={() => toggleCollapse("vrestin")}> {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry </button>
           {!isCollapsed("vrestin") && (
             <div style={{ marginBottom: "2rem" }}>
               <input
@@ -199,7 +199,7 @@ export default function App() {
             </div>
           )}
 
-          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("addCreature")}> {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature </button>
+          <button style={{ marginBottom: "1rem", marginTop: "1rem" }} onClick={() => toggleCollapse("addCreature")}> {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature </button>
           {!isCollapsed("addCreature") && (
             <div style={{ marginBottom: "2rem" }}>
               <input
