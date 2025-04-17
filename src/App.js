@@ -161,13 +161,13 @@ export default function App() {
 
   return (
     <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ textAlign: "center" }}>Vrestin +1/+1 Counter Tracker</h1>
+      <h1 style={{ textAlign: "center", marginBottom: "2rem" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
         <div>
-          <button style={{ marginBottom: "0.5rem" }} onClick={() => toggleCollapse("activeCards")}>{isCollapsed("activeCards") ? "▶" : "▼"} Active Cards</button>
+          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("activeCards")}>{isCollapsed("activeCards") ? "▶" : "▼"} Active Cards</button>
           {!isCollapsed("activeCards") && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
               {supportCards.map((card) => (
                 <div
                   key={card.id}
@@ -185,51 +185,51 @@ export default function App() {
             </div>
           )}
 
-          <button style={{ marginBottom: "0.5rem" }} onClick={() => toggleCollapse("vrestin")}> {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry </button>
+          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("vrestin")}> {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry </button>
           {!isCollapsed("vrestin") && (
-            <div style={{ marginBottom: "1rem" }}>
+            <div style={{ marginBottom: "2rem" }}>
               <input
                 type="number"
                 value={vrestinX}
                 onChange={(e) => setVrestinX(e.target.value)}
                 placeholder="X Value"
-                style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
+                style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
               />
               <button onClick={calculateETB} style={{ width: "100%", padding: "0.5rem" }}>Summon Vrestin</button>
             </div>
           )}
 
-          <button style={{ marginBottom: "0.5rem" }} onClick={() => toggleCollapse("addCreature")}> {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature </button>
+          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("addCreature")}> {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature </button>
           {!isCollapsed("addCreature") && (
-            <div style={{ marginBottom: "1rem" }}>
+            <div style={{ marginBottom: "2rem" }}>
               <input
                 type="text"
                 placeholder="Creature Name"
                 value={newCreatureName}
                 onChange={handleNameChange}
-                style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
+                style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
               />
               <input
                 type="number"
                 value={startingCounters}
                 onChange={(e) => setStartingCounters(e.target.value)}
                 placeholder="+1/+1 Counters"
-                style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
+                style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
               />
               <button onClick={addCreature} style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}>Add</button>
               <button onClick={clearAllCreatures} style={{ width: "100%", padding: "0.5rem" }}>Clear All Creatures</button>
             </div>
           )}
 
-          <button onClick={handleCombat} style={{ width: "100%", padding: "0.5rem" }}>Attack with Insects</button>
+          <button onClick={handleCombat} style={{ width: "100%", padding: "0.75rem", marginTop: "1rem" }}>Attack with Insects</button>
         </div>
 
         <div>
-          <h2>Creatures</h2>
+          <h2 style={{ marginBottom: "1rem" }}>Creatures</h2>
           {creatures.map((c, i) => (
-            <div key={i} style={{ background: "#333", padding: "0.5rem", marginBottom: "0.5rem", borderRadius: "8px" }}>
+            <div key={i} style={{ background: "#333", padding: "0.75rem", marginBottom: "1rem", borderRadius: "8px" }}>
               {c.name}: {c.base[0]}/{c.base[1]} (+{c.counters}/+{c.counters})
-              <div>
+              <div style={{ marginTop: "0.5rem", display: "flex", gap: "0.5rem" }}>
                 <button onClick={() => updateCounter(i, 1)}>+1</button>
                 <button onClick={() => updateCounter(i, -1)}>-1</button>
                 <button onClick={() => removeCreature(i)}>🗑️</button>
@@ -241,9 +241,9 @@ export default function App() {
           <textarea
             readOnly
             value={resultLog.join("\n-------------------\n")}
-            style={{ width: "100%", height: "200px", backgroundColor: "#111", color: "white", padding: "0.5rem", borderRadius: "8px" }}
+            style={{ width: "100%", height: "200px", backgroundColor: "#111", color: "white", padding: "0.5rem", borderRadius: "8px", marginTop: "1rem" }}
           />
-          <button onClick={clearLog} style={{ width: "100%", padding: "0.5rem", marginTop: "0.5rem" }}>Clear Log</button>
+          <button onClick={clearLog} style={{ width: "100%", padding: "0.5rem", marginTop: "1rem" }}>Clear Log</button>
         </div>
       </div>
     </div>
