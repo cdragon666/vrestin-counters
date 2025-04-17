@@ -28,11 +28,7 @@ export default function App() {
   const [startingCounters, setStartingCounters] = useState(0);
   const [resultLog, setResultLog] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [collapsedSections, setCollapsedSections] = useState({
-    activeCards: true,
-    vrestin: true,
-    addCreature: true
-  });
+  const [collapsedSections, setCollapsedSections] = useState({});
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -66,39 +62,43 @@ export default function App() {
 
   const calculateETB = () => {
     const base = parseInt(vrestinX);
-    const [vrestinCounters, vrestinSteps] = getReplacementCounterStack(base);
-    const insectCount = base;
-
-    const logEntries = [
+    const [counterValue, steps] = getReplacementCounterStack(base);
+    const log = [
       `[Vrestin Entry]`,
       `Vrestin enters for X = ${base}`,
       `Triggers:`,
-      ...vrestinSteps.map((s) => `- ${s}`),
-      `Result: Vrestin enters with ${vrestinCounters} +1/+1 counters`
+      ...steps.map((s) => `- ${s}`),
+      `Result: Vrestin enters with ${counterValue} +1/+1 counters`
     ];
 
-    const newCreatures = [];
-    if (!creatures.find((c) => c.name === "Vrestin")) {
-      newCreatures.push({ name: "Vrestin", base: [0, 0], counters: vrestinCounters });
-    }
-
-    for (let i = 0; i < insectCount; i++) {
-      let counters = 0;
-      let steps = [];
-      if (has("unicorn")) {
-        [counters, steps] = getReplacementCounterStack(1);
-        logEntries.push(
-          `\n[Unicorn Trigger on Insect ${i + 1}]`,
-          `Base: 1`,
-          ...steps.map((s) => `- ${s}`),
-          `Result: +${counters} counter`
-        );
-      }
-      newCreatures.push({ name: `Insect ${i + 1}`, base: [1, 1], counters });
-    }
+    const newCreatures = [
+      ...(creatures.find((c) => c.name === "Vrestin")
+        ? []
+        : [{ name: "Vrestin", base: [0, 0], counters: counterValue }]),
+      ...Array(base).fill().map((_, i) => ({
+        name: `Insect ${i + 1}`,
+        base: [1, 1],
+        counters: has("unicorn") ? 1 : 0
+      }))
+    ];
 
     setCreatures((prev) => [...prev, ...newCreatures]);
-    setResultLog((prev) => [logEntries.join("\n"), ...prev]);
+    setResultLog((prev) => [log.join("\n"), ...prev]);
+  };
+
+  const handleCombat = () => {
+    const baseBonus = 1;
+    const [bonus, steps] = getReplacementCounterStack(baseBonus);
+    const log = [`[Combat Phase] All insects get +${bonus}`];
+    const updated = creatures.map((c) => {
+      const isInsect = c.name.toLowerCase().includes("insect") || c.name === "Vrestin";
+      return {
+        ...c,
+        counters: isInsect ? c.counters + bonus : c.counters
+      };
+    });
+    setCreatures(updated);
+    setResultLog((prev) => [log.join("\n"), ...prev]);
   };
 
   const updateCounter = (index, delta) => {
@@ -113,7 +113,10 @@ export default function App() {
     setCreatures((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const clearAllCreatures = () => setCreatures([]);
+  const clearAllCreatures = () => {
+    setCreatures([]);
+  };
+
   const clearLog = () => setResultLog([]);
 
   const addCreature = () => {
@@ -122,7 +125,8 @@ export default function App() {
     const data = creatureData[name.toLowerCase()];
     const base = data ? data.base : [0, 0];
     const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
-    setCreatures([...creatures, { name: newCreatureName, base, counters: baseCounters }]);
+    const final = baseCounters;
+    setCreatures([...creatures, { name: newCreatureName, base, counters: final }]);
     setNewCreatureName("");
     setStartingCounters(0);
     setSuggestions([]);
@@ -161,11 +165,9 @@ export default function App() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
         <div>
-          <button onClick={() => toggleCollapse("activeCards")}>
-            {isCollapsed("activeCards") ? "▶" : "▼"} Active Cards
-          </button>
+          <button onClick={() => toggleCollapse("activeCards")}>{isCollapsed("activeCards") ? "▶" : "▼"} Active Cards</button>
           {!isCollapsed("activeCards") && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "0.5rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
               {supportCards.map((card) => (
                 <div
                   key={card.id}
@@ -191,7 +193,7 @@ export default function App() {
                 value={vrestinX}
                 onChange={(e) => setVrestinX(e.target.value)}
                 placeholder="X Value"
-                style={{ width: "100%", padding: "0.5rem", margin: "0.5rem 0" }}
+                style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
               />
               <button onClick={calculateETB}>Summon Vrestin</button>
             </>
@@ -216,6 +218,8 @@ export default function App() {
               <button onClick={clearAllCreatures}>Clear All Creatures</button>
             </>
           )}
+
+          <button onClick={handleCombat} style={{ marginTop: "1rem" }}>Attack with Insects</button>
         </div>
 
         <div>
