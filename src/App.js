@@ -88,7 +88,7 @@ export default function App() {
 
   const handleCombat = () => {
     const baseBonus = 1;
-    const [bonus] = getReplacementCounterStack(baseBonus);
+    const [bonus, steps] = getReplacementCounterStack(baseBonus);
     const log = [`[Combat Phase] All insects get +${bonus}`];
     const updated = creatures.map((c) => {
       const isInsect = c.name.toLowerCase().includes("insect") || c.name === "Vrestin";
@@ -165,70 +165,67 @@ export default function App() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
         <div>
-          <button style={{ marginTop: "1rem", marginBottom: "1rem" }} onClick={() => toggleCollapse("activeCards")}>
-            {isCollapsed("activeCards") ? "▶" : "▼"} Active Cards
-          </button>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <button style={{ marginBottom: "0.5rem" }} onClick={() => toggleCollapse("activeCards")}>{isCollapsed("activeCards") ? "▶" : "▼"} Active Cards</button>
+            {!isCollapsed("activeCards") && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+                {supportCards.map((card) => (
+                  <div
+                    key={card.id}
+                    onClick={() => toggleCard(card.id)}
+                    style={{
+                      backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
+                      padding: "0.8rem",
+                      borderRadius: "8px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {card.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {!isCollapsed("activeCards") && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
-              {supportCards.map((card) => (
-                <div
-                  key={card.id}
-                  onClick={() => toggleCard(card.id)}
-                  style={{
-                    backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
-                    padding: "0.8rem",
-                    borderRadius: "8px",
-                    cursor: "pointer"
-                  }}
-                >
-                  {card.name}
-                </div>
-              ))}
-            </div>
-          )}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <button style={{ marginBottom: "0.5rem" }} onClick={() => toggleCollapse("vrestin")}> {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry </button>
+            {!isCollapsed("vrestin") && (
+              <div>
+                <input
+                  type="number"
+                  value={vrestinX}
+                  onChange={(e) => setVrestinX(e.target.value)}
+                  placeholder="X Value"
+                  style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
+                />
+                <button onClick={calculateETB} style={{ width: "100%", padding: "0.5rem" }}>Summon Vrestin</button>
+              </div>
+            )}
+          </div>
 
-          <button style={{ marginTop: "1rem", marginBottom: "1rem" }} onClick={() => toggleCollapse("vrestin")}>
-            {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry
-          </button>
-
-          {!isCollapsed("vrestin") && (
-            <div style={{ marginBottom: "2rem" }}>
-              <input
-                type="number"
-                value={vrestinX}
-                onChange={(e) => setVrestinX(e.target.value)}
-                placeholder="X Value"
-                style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
-              />
-              <button onClick={calculateETB} style={{ width: "100%", padding: "0.5rem" }}>Summon Vrestin</button>
-            </div>
-          )}
-
-          <button style={{ marginTop: "1rem", marginBottom: "1rem" }} onClick={() => toggleCollapse("addCreature")}>
-            {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature
-          </button>
-
-          {!isCollapsed("addCreature") && (
-            <div style={{ marginBottom: "2rem" }}>
-              <input
-                type="text"
-                placeholder="Creature Name"
-                value={newCreatureName}
-                onChange={handleNameChange}
-                style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
-              />
-              <input
-                type="number"
-                value={startingCounters}
-                onChange={(e) => setStartingCounters(e.target.value)}
-                placeholder="+1/+1 Counters"
-                style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
-              />
-              <button onClick={addCreature} style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}>Add</button>
-              <button onClick={clearAllCreatures} style={{ width: "100%", padding: "0.5rem" }}>Clear All Creatures</button>
-            </div>
-          )}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <button style={{ marginBottom: "0.5rem" }} onClick={() => toggleCollapse("addCreature")}> {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature </button>
+            {!isCollapsed("addCreature") && (
+              <div>
+                <input
+                  type="text"
+                  placeholder="Creature Name"
+                  value={newCreatureName}
+                  onChange={handleNameChange}
+                  style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
+                />
+                <input
+                  type="number"
+                  value={startingCounters}
+                  onChange={(e) => setStartingCounters(e.target.value)}
+                  placeholder="+1/+1 Counters"
+                  style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
+                />
+                <button onClick={addCreature} style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}>Add</button>
+                <button onClick={clearAllCreatures} style={{ width: "100%", padding: "0.5rem" }}>Clear All Creatures</button>
+              </div>
+            )}
+          </div>
 
           <button onClick={handleCombat} style={{ width: "100%", padding: "0.75rem", marginTop: "1rem" }}>Attack with Insects</button>
         </div>
