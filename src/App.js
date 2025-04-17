@@ -165,9 +165,9 @@ export default function App() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
         <div>
-          <button onClick={() => toggleCollapse("activeCards")}>{isCollapsed("activeCards") ? "▶" : "▼"} Active Cards</button>
+          <button style={{ marginBottom: "0.5rem" }} onClick={() => toggleCollapse("activeCards")}>{isCollapsed("activeCards") ? "▶" : "▼"} Active Cards</button>
           {!isCollapsed("activeCards") && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
               {supportCards.map((card) => (
                 <div
                   key={card.id}
@@ -185,9 +185,9 @@ export default function App() {
             </div>
           )}
 
-          <button onClick={() => toggleCollapse("vrestin")}> {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry </button>
+          <button style={{ marginBottom: "0.5rem" }} onClick={() => toggleCollapse("vrestin")}> {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry </button>
           {!isCollapsed("vrestin") && (
-            <>
+            <div style={{ marginBottom: "1rem" }}>
               <input
                 type="number"
                 value={vrestinX}
@@ -195,31 +195,33 @@ export default function App() {
                 placeholder="X Value"
                 style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
               />
-              <button onClick={calculateETB}>Summon Vrestin</button>
-            </>
+              <button onClick={calculateETB} style={{ width: "100%", padding: "0.5rem" }}>Summon Vrestin</button>
+            </div>
           )}
 
-          <button onClick={() => toggleCollapse("addCreature")}> {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature </button>
+          <button style={{ marginBottom: "0.5rem" }} onClick={() => toggleCollapse("addCreature")}> {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature </button>
           {!isCollapsed("addCreature") && (
-            <>
+            <div style={{ marginBottom: "1rem" }}>
               <input
                 type="text"
                 placeholder="Creature Name"
                 value={newCreatureName}
                 onChange={handleNameChange}
+                style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
               />
               <input
                 type="number"
                 value={startingCounters}
                 onChange={(e) => setStartingCounters(e.target.value)}
                 placeholder="+1/+1 Counters"
+                style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
               />
-              <button onClick={addCreature}>Add</button>
-              <button onClick={clearAllCreatures}>Clear All Creatures</button>
-            </>
+              <button onClick={addCreature} style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}>Add</button>
+              <button onClick={clearAllCreatures} style={{ width: "100%", padding: "0.5rem" }}>Clear All Creatures</button>
+            </div>
           )}
 
-          <button onClick={handleCombat} style={{ marginTop: "1rem" }}>Attack with Insects</button>
+          <button onClick={handleCombat} style={{ width: "100%", padding: "0.5rem" }}>Attack with Insects</button>
         </div>
 
         <div>
@@ -241,7 +243,7 @@ export default function App() {
             value={resultLog.join("\n-------------------\n")}
             style={{ width: "100%", height: "200px", backgroundColor: "#111", color: "white", padding: "0.5rem", borderRadius: "8px" }}
           />
-          <button onClick={clearLog}>Clear Log</button>
+          <button onClick={clearLog} style={{ width: "100%", padding: "0.5rem", marginTop: "0.5rem" }}>Clear Log</button>
         </div>
       </div>
     </div>
