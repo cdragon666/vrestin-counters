@@ -39,52 +39,63 @@ export default function App() {
 
   const has = (id) => selectedCards.includes(id);
 
-  const calculateVrestinEntry = () => {
-    const base = parseInt(vrestinX);
+  const getCounterBonuses = (base, source = "") => {
     let value = base;
-    let steps = [];
-    let multiplierSteps = [];
-    let totalMultiplier = 1;
+    let breakdown = [];
 
-    const add = (label, amount) => {
-      value += amount;
-      steps.push(`${label} adds +${amount} → ${value}`);
-    };
-    const multiply = (label, factor) => {
-      totalMultiplier *= factor;
-      multiplierSteps.push(`${label} doubles → ×${totalMultiplier}`);
-    };
+    if (has("hardened_scales")) {
+      value += 1;
+      breakdown.push("+1 from Hardened Scales");
+    }
+    if (has("conclave_mentor")) {
+      value += 1;
+      breakdown.push("+1 from Conclave Mentor");
+    }
+    if (has("kami")) {
+      value += 1;
+      breakdown.push("+1 from Kami of Whispered Hopes");
+    }
+    if (has("ozolith")) {
+      value += 1;
+      breakdown.push("+1 from Ozolith");
+    }
+    if (has("innkeeper")) {
+      value += 1;
+      breakdown.push("+1 from Innkeeper's Talent");
+    }
+    if (has("branching_evolution")) {
+      value *= 2;
+      breakdown.push("doubled by Branching Evolution");
+    }
+    if (has("innkeeper")) {
+      value *= 2;
+      breakdown.push("doubled by Innkeeper's Talent");
+    }
 
-    if (has("hardened_scales")) add("Hardened Scales", 1);
-    if (has("conclave_mentor")) add("Conclave Mentor", 1);
-    if (has("kami")) add("Kami of Whispered Hopes", 1);
-    if (has("ozolith")) add("Ozolith", 1);
-    if (has("innkeeper")) add("Innkeeper's Talent", 1);
+    return [value, breakdown];
+  };
 
-    if (has("branching_evolution")) multiply("Branching Evolution", 2);
-    if (has("innkeeper")) multiply("Innkeeper's Talent", 2);
+  const calculateETB = () => {
+    const base = parseInt(vrestinX);
+    const [vrestinCounters, vrestinBreakdown] = getCounterBonuses(base);
+    let log = [`Vrestin enters with ${vrestinCounters} +1/+1 counters (X = ${base}${vrestinBreakdown.length ? ", " + vrestinBreakdown.join(", ") : ""})`];
 
-    const finalCounters = value * totalMultiplier;
-
-    const log = [
-      `[Vrestin Entry] X = ${base}`,
-      `> Replacement Effects:`,
-      ...steps,
-      ...multiplierSteps,
-      `✅ Vrestin enters with ${finalCounters} +1/+1 counters`
-    ];
+    let bonusFromUnicorn = 0;
+    if (has("unicorn")) {
+      bonusFromUnicorn = 1;
+      if (has("hardened_scales")) bonusFromUnicorn += 1;
+      if (has("conclave_mentor")) bonusFromUnicorn += 1;
+      log.push(`Gets +${bonusFromUnicorn} more from Good-Fortune Unicorn`);
+    }
 
     const newCreatures = [
       ...(creatures.find((c) => c.name === "Vrestin")
         ? []
-        : [{ name: "Vrestin", base: [0, 0], counters: finalCounters }]),
+        : [{ name: "Vrestin", base: [0, 0], counters: vrestinCounters + bonusFromUnicorn }]),
       ...Array(base).fill().map((_, i) => {
-        let insectCounters = 0;
-        if (has("unicorn")) {
-          insectCounters = 1;
-          if (has("hardened_scales")) insectCounters++;
-          if (has("conclave_mentor")) insectCounters++;
-        }
+        const baseInsect = 1;
+        const insectCounters = has("unicorn") ? bonusFromUnicorn : 0;
+        log.push(`Insect ${i + 1} gets +${insectCounters} counters from Unicorn`);
         return {
           name: `Insect ${i + 1}`,
           base: [1, 1],
@@ -93,31 +104,13 @@ export default function App() {
       })
     ];
 
-    if (has("unicorn")) {
-      log.push("> Triggered Abilities:");
-      Array(base).fill().forEach((_, i) => {
-        const unicornBonus = 1 + (has("hardened_scales") ? 1 : 0) + (has("conclave_mentor") ? 1 : 0);
-        log.push(`- Unicorn triggers → Insect ${i + 1} gets +${unicornBonus}`);
-      });
-    }
-
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log.join("\n"), ...prev]);
   };
 
   const handleCombat = () => {
-    const baseBonus = 1;
-    let bonus = baseBonus;
-    let details = [];
-
-    if (has("hardened_scales")) bonus++, details.push("+1 (Hardened Scales)");
-    if (has("conclave_mentor")) bonus++, details.push("+1 (Conclave Mentor)");
-    if (has("kami")) bonus++, details.push("+1 (Kami)");
-    if (has("ozolith")) bonus++, details.push("+1 (Ozolith)");
-    if (has("innkeeper")) bonus++, details.push("+1 (Innkeeper)");
-    if (has("branching_evolution")) bonus *= 2, details.push("×2 (Branching Evolution)");
-    if (has("innkeeper")) bonus *= 2, details.push("×2 (Innkeeper)");
-
+    const [bonus] = getCounterBonuses(1);
+    const log = [`Combat Phase: All insects get +${bonus} counters`];
     const updated = creatures.map((c) => {
       const isInsect = c.name.toLowerCase().includes("insect") || c.name === "Vrestin";
       return {
@@ -125,8 +118,6 @@ export default function App() {
         counters: isInsect ? c.counters + bonus : c.counters
       };
     });
-
-    const log = [`[Combat Phase] Insects get +${bonus} (${details.join(" → ")})`];
     setCreatures(updated);
     setResultLog((prev) => [log.join("\n"), ...prev]);
   };
@@ -143,7 +134,10 @@ export default function App() {
     setCreatures((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const clearAllCreatures = () => setCreatures([]);
+  const clearAllCreatures = () => {
+    setCreatures([]);
+  };
+
   const clearLog = () => setResultLog([]);
 
   const addCreature = () => {
@@ -152,7 +146,8 @@ export default function App() {
     const data = creatureData[name.toLowerCase()];
     const base = data ? data.base : [0, 0];
     const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
-    setCreatures([...creatures, { name, base, counters: baseCounters }]);
+    const final = baseCounters;
+    setCreatures([...creatures, { name: newCreatureName, base, counters: final }]);
     setNewCreatureName("");
     setStartingCounters(0);
     setSuggestions([]);
@@ -168,8 +163,19 @@ export default function App() {
     setSuggestions(matches);
   };
 
+  const fillSuggestion = (name) => {
+    const displayName = name.replace(/\b\w/g, (c) => c.toUpperCase());
+    setNewCreatureName(displayName);
+    const data = creatureData[name];
+    if (data) setStartingCounters(data.counters);
+    setSuggestions([]);
+  };
+
   const toggleCollapse = (section) => {
-    setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   const isCollapsed = (section) => collapsedSections[section];
@@ -207,7 +213,7 @@ export default function App() {
                 onChange={(e) => setVrestinX(e.target.value)}
                 placeholder="X Value"
               />
-              <button onClick={calculateVrestinEntry} className="btn green">Summon Vrestin</button>
+              <button onClick={calculateETB} className="btn green">Summon Vrestin</button>
             </div>
           )}
 
