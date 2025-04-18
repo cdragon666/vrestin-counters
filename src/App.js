@@ -1,4 +1,3 @@
-// Updated App.js with full support card logic and clearer logs
 import { useState } from "react";
 import "./App.css";
 
@@ -40,68 +39,66 @@ export default function App() {
 
   const has = (id) => selectedCards.includes(id);
 
-  const calculateETB = () => {
+  const calculateVrestinEntry = () => {
     const base = parseInt(vrestinX);
     let value = base;
     let steps = [];
-    let log = [`[Vrestin Entry]`, `X = ${base}`, ""];
+    let multiplierSteps = [];
+    let totalMultiplier = 1;
 
-    // Replacement Effects Section
-    log.push("> Replacement Effects:");
-    const addStep = (label, amount) => {
+    const add = (label, amount) => {
       value += amount;
-      steps.push(`- ${label} adds +${amount} → ${value}`);
+      steps.push(`${label} adds +${amount} → ${value}`);
     };
-    const double = (label) => {
-      value *= 2;
-      steps.push(`- ${label} doubles → ${value}`);
+    const multiply = (label, factor) => {
+      totalMultiplier *= factor;
+      multiplierSteps.push(`${label} doubles → ×${totalMultiplier}`);
     };
 
-    if (has("hardened_scales")) addStep("Hardened Scales", 1);
-    if (has("conclave_mentor")) addStep("Conclave Mentor", 1);
-    if (has("kami")) addStep("Kami of Whispered Hopes", 1);
-    if (has("ozolith")) addStep("Ozolith", 1);
-    if (has("innkeeper")) addStep("Innkeeper's Talent", 1);
-    if (has("branching_evolution")) double("Branching Evolution");
-    if (has("innkeeper")) double("Innkeeper's Talent");
-    log.push(...steps, "");
+    if (has("hardened_scales")) add("Hardened Scales", 1);
+    if (has("conclave_mentor")) add("Conclave Mentor", 1);
+    if (has("kami")) add("Kami of Whispered Hopes", 1);
+    if (has("ozolith")) add("Ozolith", 1);
+    if (has("innkeeper")) add("Innkeeper's Talent", 1);
 
-    // Triggered Abilities Section
-    let triggered = [];
-    let unicornBonus = 0;
+    if (has("branching_evolution")) multiply("Branching Evolution", 2);
+    if (has("innkeeper")) multiply("Innkeeper's Talent", 2);
+
+    const finalCounters = value * totalMultiplier;
+
+    const log = [
+      `[Vrestin Entry] X = ${base}`,
+      `> Replacement Effects:`,
+      ...steps,
+      ...multiplierSteps,
+      `✅ Vrestin enters with ${finalCounters} +1/+1 counters`
+    ];
+
+    const newCreatures = [
+      ...(creatures.find((c) => c.name === "Vrestin")
+        ? []
+        : [{ name: "Vrestin", base: [0, 0], counters: finalCounters }]),
+      ...Array(base).fill().map((_, i) => {
+        let insectCounters = 0;
+        if (has("unicorn")) {
+          insectCounters = 1;
+          if (has("hardened_scales")) insectCounters++;
+          if (has("conclave_mentor")) insectCounters++;
+        }
+        return {
+          name: `Insect ${i + 1}`,
+          base: [1, 1],
+          counters: insectCounters
+        };
+      })
+    ];
+
     if (has("unicorn")) {
-      triggered.push("- Good-Fortune Unicorn triggers → +1");
-      unicornBonus += 1;
-      if (has("hardened_scales")) {
-        unicornBonus += 1;
-        triggered.push("- Hardened Scales boosts Unicorn trigger → +1");
-      }
-      triggered.push(`→ +${unicornBonus} total from Unicorn`);
-    }
-    if (triggered.length > 0) {
-      log.push("> Triggered Abilities:", ...triggered, "");
-    }
-
-    value += unicornBonus;
-    log.push(`✅ Vrestin enters with ${value} +1/+1 counters`, "");
-
-    const newCreatures = [];
-    if (!creatures.find((c) => c.name.toLowerCase() === "vrestin")) {
-      newCreatures.push({ name: "Vrestin", base: [0, 0], counters: value });
-    }
-
-    for (let i = 0; i < base; i++) {
-      let insectBonus = 0;
-      if (has("unicorn")) insectBonus++;
-      if (has("unicorn") && has("hardened_scales")) insectBonus++;
-      newCreatures.push({
-        name: `Insect ${i + 1}`,
-        base: [1, 1],
-        counters: insectBonus
+      log.push("> Triggered Abilities:");
+      Array(base).fill().forEach((_, i) => {
+        const unicornBonus = 1 + (has("hardened_scales") ? 1 : 0) + (has("conclave_mentor") ? 1 : 0);
+        log.push(`- Unicorn triggers → Insect ${i + 1} gets +${unicornBonus}`);
       });
-      if (insectBonus > 0) {
-        log.push(`- Unicorn triggers → Insect ${i + 1} gets +${insectBonus}`);
-      }
     }
 
     setCreatures((prev) => [...prev, ...newCreatures]);
@@ -109,9 +106,18 @@ export default function App() {
   };
 
   const handleCombat = () => {
-    let bonus = 1;
-    if (has("hardened_scales")) bonus++;
-    const log = [`[Combat Phase] All insects get +${bonus}`];
+    const baseBonus = 1;
+    let bonus = baseBonus;
+    let details = [];
+
+    if (has("hardened_scales")) bonus++, details.push("+1 (Hardened Scales)");
+    if (has("conclave_mentor")) bonus++, details.push("+1 (Conclave Mentor)");
+    if (has("kami")) bonus++, details.push("+1 (Kami)");
+    if (has("ozolith")) bonus++, details.push("+1 (Ozolith)");
+    if (has("innkeeper")) bonus++, details.push("+1 (Innkeeper)");
+    if (has("branching_evolution")) bonus *= 2, details.push("×2 (Branching Evolution)");
+    if (has("innkeeper")) bonus *= 2, details.push("×2 (Innkeeper)");
+
     const updated = creatures.map((c) => {
       const isInsect = c.name.toLowerCase().includes("insect") || c.name === "Vrestin";
       return {
@@ -119,6 +125,8 @@ export default function App() {
         counters: isInsect ? c.counters + bonus : c.counters
       };
     });
+
+    const log = [`[Combat Phase] Insects get +${bonus} (${details.join(" → ")})`];
     setCreatures(updated);
     setResultLog((prev) => [log.join("\n"), ...prev]);
   };
@@ -160,19 +168,8 @@ export default function App() {
     setSuggestions(matches);
   };
 
-  const fillSuggestion = (name) => {
-    const displayName = name.replace(/\b\w/g, (c) => c.toUpperCase());
-    setNewCreatureName(displayName);
-    const data = creatureData[name];
-    if (data) setStartingCounters(data.counters);
-    setSuggestions([]);
-  };
-
   const toggleCollapse = (section) => {
-    setCollapsedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
+    setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
   const isCollapsed = (section) => collapsedSections[section];
@@ -210,7 +207,7 @@ export default function App() {
                 onChange={(e) => setVrestinX(e.target.value)}
                 placeholder="X Value"
               />
-              <button onClick={calculateETB} className="btn green">Summon Vrestin</button>
+              <button onClick={calculateVrestinEntry} className="btn green">Summon Vrestin</button>
             </div>
           )}
 
