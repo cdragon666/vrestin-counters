@@ -163,18 +163,20 @@ export default function App() {
     <div style={{ padding: "1rem", backgroundColor: "#1a1a1a", color: "white", fontFamily: "Arial, sans-serif" }}>
       <h1 style={{ textAlign: "center", marginBottom: "2rem" }}>Vrestin +1/+1 Counter Tracker</h1>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
-        <div>
-          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("activeCards")}>{isCollapsed("activeCards") ? "▶" : "▼"} Active Cards</button>
+      <div style={{ display: "flex", flexDirection: "row", gap: "2rem" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <button onClick={() => toggleCollapse("activeCards")}>
+            {isCollapsed("activeCards") ? "▶" : "▼"} Active Cards
+          </button>
           {!isCollapsed("activeCards") && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
               {supportCards.map((card) => (
                 <div
                   key={card.id}
                   onClick={() => toggleCard(card.id)}
                   style={{
                     backgroundColor: selectedCards.includes(card.id) ? "#4caf50" : "#2e2e2e",
-                    padding: "0.8rem",
+                    padding: "0.5rem",
                     borderRadius: "8px",
                     cursor: "pointer"
                   }}
@@ -185,54 +187,60 @@ export default function App() {
             </div>
           )}
 
-          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("vrestin")}>{isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry</button>
+          <button onClick={() => toggleCollapse("vrestin")}>{isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry</button>
           {!isCollapsed("vrestin") && (
-            <div style={{ marginBottom: "2rem" }}>
+            <div>
               <input
                 type="number"
                 value={vrestinX}
                 onChange={(e) => setVrestinX(e.target.value)}
                 placeholder="X Value"
-                style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
+                style={{ width: "100%", padding: "0.5rem" }}
               />
-              <button onClick={calculateETB} style={{ width: "100%", padding: "0.5rem" }}>Summon Vrestin</button>
+              <button onClick={calculateETB} style={{ marginTop: "0.5rem", backgroundColor: "#4caf50", padding: "0.5rem" }}>
+                Summon Vrestin
+              </button>
             </div>
           )}
 
-          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("addCreature")}>{isCollapsed("addCreature") ? "▶" : "▼"} Add Creature</button>
+          <button onClick={() => toggleCollapse("addCreature")}>{isCollapsed("addCreature") ? "▶" : "▼"} Add Creature</button>
           {!isCollapsed("addCreature") && (
-            <div style={{ marginBottom: "2rem" }}>
+            <div>
               <input
                 type="text"
                 placeholder="Creature Name"
                 value={newCreatureName}
                 onChange={handleNameChange}
-                style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
+                style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
               />
               <input
                 type="number"
                 value={startingCounters}
                 onChange={(e) => setStartingCounters(e.target.value)}
                 placeholder="+1/+1 Counters"
-                style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
+                style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
               />
-              <button onClick={addCreature} style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}>Add</button>
-              <button onClick={clearAllCreatures} style={{ width: "100%", padding: "0.5rem" }}>Clear All Creatures</button>
+              <button onClick={addCreature} style={{ width: "100%", padding: "0.5rem", backgroundColor: "#4caf50" }}>
+                Add
+              </button>
+              <button onClick={clearAllCreatures} style={{ width: "100%", padding: "0.5rem", marginTop: "0.5rem", backgroundColor: "#c62828" }}>
+                Clear All Creatures
+              </button>
             </div>
           )}
 
-          <button onClick={handleCombat} style={{ width: "100%", padding: "0.75rem", marginTop: "1rem" }}>Attack with Insects</button>
+          <button onClick={handleCombat} style={{ width: "100%", padding: "0.75rem", marginTop: "1rem", backgroundColor: "#4caf50" }}>Attack with Insects</button>
         </div>
 
-        <div>
-          <h2 style={{ marginBottom: "1rem" }}>Creatures</h2>
+        <div style={{ flex: 1 }}>
+          <h2>Creatures</h2>
           {creatures.map((c, i) => (
             <div key={i} style={{ background: "#333", padding: "0.75rem", marginBottom: "1rem", borderRadius: "8px" }}>
               {c.name}: {c.base[0]}/{c.base[1]} (+{c.counters}/+{c.counters})
               <div style={{ marginTop: "0.5rem", display: "flex", gap: "0.5rem" }}>
                 <button onClick={() => updateCounter(i, 1)}>+1</button>
                 <button onClick={() => updateCounter(i, -1)}>-1</button>
-                <button onClick={() => removeCreature(i)}>🗑️</button>
+                <button onClick={() => removeCreature(i)} style={{ backgroundColor: "#c62828", color: "white" }}>🗑️</button>
               </div>
             </div>
           ))}
@@ -241,9 +249,9 @@ export default function App() {
           <textarea
             readOnly
             value={resultLog.join("\n-------------------\n")}
-            style={{ width: "100%", height: "200px", backgroundColor: "#111", color: "white", padding: "0.5rem", borderRadius: "8px", marginTop: "1rem" }}
+            style={{ width: "100%", height: "200px", backgroundColor: "#111", color: "white", padding: "0.5rem", borderRadius: "8px" }}
           />
-          <button onClick={clearLog} style={{ width: "100%", padding: "0.5rem", marginTop: "1rem" }}>Clear Log</button>
+          <button onClick={clearLog} style={{ width: "100%", padding: "0.5rem", marginTop: "1rem", backgroundColor: "#c62828", color: "white" }}>Clear Log</button>
         </div>
       </div>
     </div>
