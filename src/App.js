@@ -1,9 +1,5 @@
-import { useState, useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebase";
-import AuthPage from "./AuthPage";
+import { useState } from "react";
 
-// your existing imports and data...
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
   { id: "branching_evolution", name: "Branching Evolution" },
@@ -25,16 +21,6 @@ const creatureData = {
 };
 
 export default function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return () => unsub();
-  }, []);
-
-  if (!user) return <AuthPage />;
-
-  // from here down is your original app logic
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
   const [creatures, setCreatures] = useState([]);
@@ -102,7 +88,7 @@ export default function App() {
 
   const handleCombat = () => {
     const baseBonus = 1;
-    const [bonus, steps] = getReplacementCounterStack(baseBonus);
+    const [bonus] = getReplacementCounterStack(baseBonus);
     const log = [`[Combat Phase] All insects get +${bonus}`];
     const updated = creatures.map((c) => {
       const isInsect = c.name.toLowerCase().includes("insect") || c.name === "Vrestin";
@@ -199,7 +185,7 @@ export default function App() {
             </div>
           )}
 
-          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("vrestin")}> {isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry </button>
+          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("vrestin")}>{isCollapsed("vrestin") ? "▶" : "▼"} Vrestin Entry</button>
           {!isCollapsed("vrestin") && (
             <div style={{ marginBottom: "2rem" }}>
               <input
@@ -213,7 +199,7 @@ export default function App() {
             </div>
           )}
 
-          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("addCreature")}> {isCollapsed("addCreature") ? "▶" : "▼"} Add Creature </button>
+          <button style={{ marginBottom: "1rem" }} onClick={() => toggleCollapse("addCreature")}>{isCollapsed("addCreature") ? "▶" : "▼"} Add Creature</button>
           {!isCollapsed("addCreature") && (
             <div style={{ marginBottom: "2rem" }}>
               <input
