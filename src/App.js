@@ -39,53 +39,49 @@ export default function App() {
 
   const has = (id) => selectedCards.includes(id);
 
-  const getReplacementCounterStack = (base) => {
-    let steps = [];
-    let value = base;
-    const step = (label, amount) => {
-      value += amount;
-      steps.push(`${label} adds +${amount} → ${value}`);
-    };
-    const double = (label) => {
-      value *= 2;
-      steps.push(`${label} doubles → ${value}`);
-    };
-
-    if (has("hardened_scales")) step("Hardened Scales", 1);
-    if (has("conclave_mentor")) step("Conclave Mentor", 1);
-    if (has("kami")) step("Kami of Whispered Hopes", 1);
-    if (has("ozolith")) step("Ozolith", 1);
-    if (has("innkeeper")) step("Innkeeper's Talent", 1);
-    if (has("branching_evolution")) double("Branching Evolution");
-    if (has("innkeeper")) double("Innkeeper's Talent");
-    return [value, steps];
-  };
-
   const calculateETB = () => {
     const base = parseInt(vrestinX);
-    const [counterValue, steps] = getReplacementCounterStack(base);
-    const log = [
-      `[Vrestin Entry]`,
-      `Vrestin enters for X = ${base}`,
-      `Triggers:`,
-      ...steps.map((s) => `- ${s}`),
-      `Result: Vrestin enters with ${counterValue} +1/+1 counters`
-    ];
+    let counterValue = base;
+    const log = ["[Vrestin Entry]", `- X = ${base}`];
 
-    const newCreatures = [
-      ...(creatures.find((c) => c.name === "Vrestin")
-        ? []
-        : [{ name: "Vrestin", base: [0, 0], counters: counterValue }]),
-      ...Array(base).fill().map((_, i) => {
-        const unicornBonus = has("unicorn") ? 1 : 0;
-        if (unicornBonus) log.push(`- Good-Fortune Unicorn triggers → Insect ${i + 1} gets +1/+1`);
-        return {
-          name: `Insect ${i + 1}`,
-          base: [1, 1],
-          counters: unicornBonus
-        };
-      })
-    ];
+    if (has("hardened_scales")) {
+      counterValue += 1;
+      log.push(`- Hardened Scales adds +1 → ${counterValue} counters`);
+    } else {
+      log.push(`- No Hardened Scales → ${counterValue} counters`);
+    }
+
+    let unicornBonus = 0;
+    if (has("unicorn")) {
+      unicornBonus += 1;
+      log.push("- Good-Fortune Unicorn adds 1");
+      if (has("hardened_scales")) {
+        unicornBonus += 1;
+        log.push("- Hardened Scales adds +1 to Unicorn trigger");
+      }
+      log.push(`→ +${unicornBonus} more counters`);
+      counterValue += unicornBonus;
+    }
+
+    log.push(`✅ Vrestin enters with ${counterValue} +1/+1 counters`);
+
+    const newCreatures = [];
+    if (!creatures.find((c) => c.name.toLowerCase() === "vrestin")) {
+      newCreatures.push({ name: "Vrestin", base: [0, 0], counters: counterValue });
+    }
+
+    for (let i = 0; i < base; i++) {
+      const insectBonus = has("unicorn") ? 1 : 0;
+      const finalInsectBonus = insectBonus + (insectBonus && has("hardened_scales") ? 1 : 0);
+      newCreatures.push({
+        name: `Insect ${i + 1}`,
+        base: [1, 1],
+        counters: finalInsectBonus
+      });
+      if (finalInsectBonus > 0) {
+        log.push(`- Good-Fortune Unicorn triggers → Insect ${i + 1} gets +${finalInsectBonus}`);
+      }
+    }
 
     setCreatures((prev) => [...prev, ...newCreatures]);
     setResultLog((prev) => [log.join("\n"), ...prev]);
@@ -93,7 +89,8 @@ export default function App() {
 
   const handleCombat = () => {
     const baseBonus = 1;
-    const [bonus] = getReplacementCounterStack(baseBonus);
+    let bonus = baseBonus;
+    if (has("hardened_scales")) bonus++;
     const log = [`[Combat Phase] All insects get +${bonus}`];
     const updated = creatures.map((c) => {
       const isInsect = c.name.toLowerCase().includes("insect") || c.name === "Vrestin";
@@ -130,14 +127,8 @@ export default function App() {
     const data = creatureData[name.toLowerCase()];
     const base = data ? data.base : [0, 0];
     const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
-    const final = baseCounters + (has("unicorn") ? 1 : 0); // Unicorn ETB trigger
-    const logLine = has("unicorn")
-      ? `[Unicorn Trigger] ${name} enters → gets +1/+1`
-      : null;
-
-    setCreatures([...creatures, { name, base, counters: final }]);
-    if (logLine) setResultLog((prev) => [logLine, ...prev]);
-
+    const final = baseCounters;
+    setCreatures([...creatures, { name: newCreatureName, base, counters: final }]);
     setNewCreatureName("");
     setStartingCounters(0);
     setSuggestions([]);
