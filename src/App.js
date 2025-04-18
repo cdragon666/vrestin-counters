@@ -1,3 +1,4 @@
+// Updated App.js with full support card logic and clearer logs
 import { useState } from "react";
 import "./App.css";
 
@@ -41,45 +42,65 @@ export default function App() {
 
   const calculateETB = () => {
     const base = parseInt(vrestinX);
-    let counterValue = base;
-    const log = ["[Vrestin Entry]", `- X = ${base}`];
+    let value = base;
+    let steps = [];
+    let log = [`[Vrestin Entry]`, `X = ${base}`, ""];
 
-    if (has("hardened_scales")) {
-      counterValue += 1;
-      log.push(`- Hardened Scales adds +1 → ${counterValue} counters`);
-    } else {
-      log.push(`- No Hardened Scales → ${counterValue} counters`);
-    }
+    // Replacement Effects Section
+    log.push("> Replacement Effects:");
+    const addStep = (label, amount) => {
+      value += amount;
+      steps.push(`- ${label} adds +${amount} → ${value}`);
+    };
+    const double = (label) => {
+      value *= 2;
+      steps.push(`- ${label} doubles → ${value}`);
+    };
 
+    if (has("hardened_scales")) addStep("Hardened Scales", 1);
+    if (has("conclave_mentor")) addStep("Conclave Mentor", 1);
+    if (has("kami")) addStep("Kami of Whispered Hopes", 1);
+    if (has("ozolith")) addStep("Ozolith", 1);
+    if (has("innkeeper")) addStep("Innkeeper's Talent", 1);
+    if (has("branching_evolution")) double("Branching Evolution");
+    if (has("innkeeper")) double("Innkeeper's Talent");
+    log.push(...steps, "");
+
+    // Triggered Abilities Section
+    let triggered = [];
     let unicornBonus = 0;
     if (has("unicorn")) {
+      triggered.push("- Good-Fortune Unicorn triggers → +1");
       unicornBonus += 1;
-      log.push("- Good-Fortune Unicorn adds 1");
       if (has("hardened_scales")) {
         unicornBonus += 1;
-        log.push("- Hardened Scales adds +1 to Unicorn trigger");
+        triggered.push("- Hardened Scales boosts Unicorn trigger → +1");
       }
-      log.push(`→ +${unicornBonus} more counters`);
-      counterValue += unicornBonus;
+      triggered.push(`→ +${unicornBonus} total from Unicorn`);
+    }
+    if (triggered.length > 0) {
+      log.push("> Triggered Abilities:", ...triggered, "");
     }
 
-    log.push(`✅ Vrestin enters with ${counterValue} +1/+1 counters`);
+    value += unicornBonus;
+    log.push(`✅ Vrestin enters with ${value} +1/+1 counters`, "");
 
     const newCreatures = [];
     if (!creatures.find((c) => c.name.toLowerCase() === "vrestin")) {
-      newCreatures.push({ name: "Vrestin", base: [0, 0], counters: counterValue });
+      newCreatures.push({ name: "Vrestin", base: [0, 0], counters: value });
     }
 
     for (let i = 0; i < base; i++) {
-      const insectBonus = has("unicorn") ? 1 : 0;
-      const finalInsectBonus = insectBonus + (insectBonus && has("hardened_scales") ? 1 : 0);
+      let insectBonus = 0;
+      if (has("unicorn")) insectBonus++;
+      if (has("unicorn") && has("hardened_scales")) insectBonus++;
       newCreatures.push({
         name: `Insect ${i + 1}`,
         base: [1, 1],
-        counters: finalInsectBonus
+        counters: insectBonus
       });
-      if (finalInsectBonus > 0) {
-        log.push(`- Good-Fortune Unicorn triggers → Insect ${i + 1} gets +${finalInsectBonus}`);
+      if (insectBonus > 0) {
+        log.push(`- Unicorn triggers → Insect ${i + 1} gets +${insectBonus}`);
       }
     }
 
@@ -88,8 +109,7 @@ export default function App() {
   };
 
   const handleCombat = () => {
-    const baseBonus = 1;
-    let bonus = baseBonus;
+    let bonus = 1;
     if (has("hardened_scales")) bonus++;
     const log = [`[Combat Phase] All insects get +${bonus}`];
     const updated = creatures.map((c) => {
@@ -115,10 +135,7 @@ export default function App() {
     setCreatures((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const clearAllCreatures = () => {
-    setCreatures([]);
-  };
-
+  const clearAllCreatures = () => setCreatures([]);
   const clearLog = () => setResultLog([]);
 
   const addCreature = () => {
@@ -127,8 +144,7 @@ export default function App() {
     const data = creatureData[name.toLowerCase()];
     const base = data ? data.base : [0, 0];
     const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
-    const final = baseCounters;
-    setCreatures([...creatures, { name: newCreatureName, base, counters: final }]);
+    setCreatures([...creatures, { name, base, counters: baseCounters }]);
     setNewCreatureName("");
     setStartingCounters(0);
     setSuggestions([]);
