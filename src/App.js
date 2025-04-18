@@ -76,11 +76,15 @@ export default function App() {
       ...(creatures.find((c) => c.name === "Vrestin")
         ? []
         : [{ name: "Vrestin", base: [0, 0], counters: counterValue }]),
-      ...Array(base).fill().map((_, i) => ({
-        name: `Insect ${i + 1}`,
-        base: [1, 1],
-        counters: has("unicorn") ? 1 : 0
-      }))
+      ...Array(base).fill().map((_, i) => {
+        const unicornBonus = has("unicorn") ? 1 : 0;
+        if (unicornBonus) log.push(`- Good-Fortune Unicorn triggers → Insect ${i + 1} gets +1/+1`);
+        return {
+          name: `Insect ${i + 1}`,
+          base: [1, 1],
+          counters: unicornBonus
+        };
+      })
     ];
 
     setCreatures((prev) => [...prev, ...newCreatures]);
@@ -126,8 +130,14 @@ export default function App() {
     const data = creatureData[name.toLowerCase()];
     const base = data ? data.base : [0, 0];
     const baseCounters = data ? data.counters : parseInt(startingCounters) || 0;
-    const final = baseCounters;
-    setCreatures([...creatures, { name: newCreatureName, base, counters: final }]);
+    const final = baseCounters + (has("unicorn") ? 1 : 0); // Unicorn ETB trigger
+    const logLine = has("unicorn")
+      ? `[Unicorn Trigger] ${name} enters → gets +1/+1`
+      : null;
+
+    setCreatures([...creatures, { name, base, counters: final }]);
+    if (logLine) setResultLog((prev) => [logLine, ...prev]);
+
     setNewCreatureName("");
     setStartingCounters(0);
     setSuggestions([]);
