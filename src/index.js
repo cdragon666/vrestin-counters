@@ -1,13 +1,12 @@
-import './index.css';
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
+// src/index.js
 
-// Render the root of the React app into the HTML div with the id 'root'
-ReactDOM.render(
+import React from "react";
+import ReactDOM from "react-dom/client";
+import ProtectedRoute from "./ProtectedRoute";
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+    <ProtectedRoute />
+  </React.StrictMode>
 );
