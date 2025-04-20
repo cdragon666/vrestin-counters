@@ -1,31 +1,27 @@
 import { useState } from "react";
+import { auth } from "./firebase";
+import { signOut } from "firebase/auth";
 import "./App.css";
 
 const cardEffects = {
-  hardened_scales: { bonusPerCounter: 1 },
-  conclave_mentor: { bonusPerCounter: 1 },
+  hardened_scales: { bonus: 1 },
+  conclave_mentor: { bonus: 1 },
   branching_evolution: { multiplier: 2 },
-  unicorn: { trigger: true, bonus: 1 },
-  ozolith: { bonusPerCounter: 1 },
-  kami: { bonusPerCounter: 1 },
-  innkeeper: { bonusPerCounter: 1, multiplier: 2 }
+  unicorn: { trigger: true, bonus: 1 }
 };
 
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
   { id: "conclave_mentor", name: "Conclave Mentor" },
   { id: "branching_evolution", name: "Branching Evolution" },
-  { id: "unicorn", name: "Good-Fortune Unicorn (ETB trigger)" },
-  { id: "ozolith", name: "Ozolith, the Shattered Spire" },
-  { id: "kami", name: "Kami of Whispered Hopes" },
-  { id: "innkeeper", name: "Innkeeper's Talent" }
+  { id: "unicorn", name: "Good-Fortune Unicorn" }
 ];
 
 export default function App() {
   const [selectedCards, setSelectedCards] = useState([]);
   const [vrestinX, setVrestinX] = useState(0);
-  const [resultLog, setResultLog] = useState([]);
   const [insects, setInsects] = useState([]);
+  const [resultLog, setResultLog] = useState([]);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
@@ -33,72 +29,74 @@ export default function App() {
     );
   };
 
-  const calculateBonuses = (base = 1) => {
+  const calculateBuffs = () => {
     let bonus = 0;
     let multiplier = 1;
-    let steps = [];
 
-    Object.entries(cardEffects).forEach(([id, effect]) => {
-      if (!selectedCards.includes(id)) return;
-      if (effect.bonusPerCounter) {
-        bonus += effect.bonusPerCounter;
-        steps.push(`+${effect.bonusPerCounter} from ${id.replace(/_/g, ' ')}`);
-      }
-      if (effect.multiplier) {
-        multiplier *= effect.multiplier;
-        steps.push(`×${effect.multiplier} from ${id.replace(/_/g, ' ')}`);
-      }
-    });
+    if (selectedCards.includes("hardened_scales")) bonus += cardEffects.hardened_scales.bonus;
+    if (selectedCards.includes("conclave_mentor")) bonus += cardEffects.conclave_mentor.bonus;
+    if (selectedCards.includes("branching_evolution")) multiplier *= cardEffects.branching_evolution.multiplier;
 
-    return [(base + bonus) * multiplier, steps];
+    return { bonus, multiplier };
   };
 
-  const calculateVrestinCounters = () => {
-    let base = parseInt(vrestinX);
-    const [replacedTotal, steps] = calculateBonuses(base);
-    let unicornBonus = 0;
-    let unicornSteps = [];
+  const summonVrestin = () => {
+    const base = parseInt(vrestinX);
+    if (isNaN(base) || base <= 0) return;
 
-    if (selectedCards.includes("unicorn")) {
-      let bonus = cardEffects.unicorn.bonus;
-      if (selectedCards.includes("hardened_scales")) bonus += 1;
-      if (selectedCards.includes("conclave_mentor")) bonus += 1;
-      if (selectedCards.includes("kami")) bonus += 1;
-      if (selectedCards.includes("ozolith")) bonus += 1;
-      if (selectedCards.includes("innkeeper")) bonus += 1;
-      if (selectedCards.includes("branching_evolution") || selectedCards.includes("innkeeper")) bonus *= 2;
-      unicornBonus = bonus;
-      unicornSteps.push(`+${bonus} from Unicorn trigger`);
-    }
+    const { bonus, multiplier } = calculateBuffs();
+    const unicornBonus = selectedCards.includes("unicorn") ? 1 + bonus : 0;
+    const totalUnicorn = selectedCards.includes("branching_evolution") ? unicornBonus * 2 : unicornBonus;
 
-    const total = replacedTotal + unicornBonus;
-    const entryLog = `Vrestin enters with ${total} +1/+1 counters (X = ${base}, ${[...steps, ...unicornSteps].join(", ")})`;
+    const vrestinCounters = (base + bonus) * multiplier + totalUnicorn;
 
-    const newInsects = Array(base).fill().map((_, i) => ({ id: i + 1, counters: 0 }));
-    setInsects(newInsects);
-
-    const insectLog = newInsects.map((ins, i) => {
-      let [counters, extraSteps] = calculateBonuses(1);
-      return `Insect ${i + 1} enters with ${counters} counters (${extraSteps.join(", ")})`;
+    const newInsects = Array.from({ length: base }, (_, i) => {
+      const insectBonus = selectedCards.includes("unicorn") ? (1 + bonus) * (selectedCards.includes("branching_evolution") ? 2 : 1) : 0;
+      return {
+        name: `Insect ${i + 1}`,
+        counters: insectBonus,
+        attacked: false
+      };
     });
 
-    setResultLog([entryLog, ...insectLog, ...resultLog]);
+    const log = [
+      `Vrestin enters with ${vrestinCounters} +1/+1 counters (X = ${base})`,
+      ...newInsects.map((i) => `${i.name} enters with ${i.counters} +1/+1 counters`)
+    ];
+
+    setInsects([...newInsects]);
+    setResultLog([log.join("\n"), ...resultLog]);
   };
 
-  const attackWithInsects = () => {
-    const updated = insects.map((i) => {
-      const [gain] = calculateBonuses(1);
-      return { ...i, counters: i.counters + gain };
-    });
+  const handleCombat = () => {
+    const { bonus, multiplier } = calculateBuffs();
+    const combatBonus = 1 + bonus;
+    const final = combatBonus * multiplier;
 
-    const attackLog = updated.map((i) => `Insect ${i.id} attacks and gets +${i.counters} total counters`);
+    const updated = insects.map((i) => ({
+      ...i,
+      counters: i.counters + final,
+      attacked: true
+    }));
+
+    const log = insects.map((i) => `${i.name} attacks and gains ${final} +1/+1 counter`);
+
     setInsects(updated);
-    setResultLog(["[Combat Phase]", ...attackLog, ...resultLog]);
+    setResultLog([log.join("\n"), ...resultLog]);
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+    window.location.reload();
   };
 
   return (
     <div className="app-container">
-      <h1 className="app-title">Vrestin +1/+1 Counter Tracker</h1>
+      <div className="header">
+        <h1 className="app-title">MTG Mechanics Master</h1>
+        <button className="btn red" onClick={logout}>Logout</button>
+      </div>
+
       <div className="grid">
         <div className="left-panel">
           <div className="card-list">
@@ -112,18 +110,15 @@ export default function App() {
               </div>
             ))}
           </div>
+
           <input
             type="number"
             value={vrestinX}
             onChange={(e) => setVrestinX(e.target.value)}
             placeholder="X Value"
           />
-          <button onClick={calculateVrestinCounters} className="btn green">
-            Summon Vrestin
-          </button>
-          <button onClick={attackWithInsects} className="btn green">
-            Attack with Insects
-          </button>
+          <button onClick={summonVrestin} className="btn green">Summon Vrestin</button>
+          <button onClick={handleCombat} className="btn green">Attack with Insects</button>
         </div>
 
         <div className="right-panel">
