@@ -9,7 +9,7 @@ const cardEffects = {
   branching_evolution: { multiplier: 2 },
   unicorn: { trigger: true, bonus: 1 },
   ozolith: { bonusPerCounter: 1 },
-  innkeeper: { bonusPerCounter: 1 }
+  innkeeper: { multiplier: 2 } // Corrected: acts as a multiplier like Branching Evolution
 };
 
 const supportCards = [
@@ -39,8 +39,10 @@ export default function App() {
     if (selectedCards.includes("hardened_scales")) unicornTotal += 1;
     if (selectedCards.includes("conclave_mentor")) unicornTotal += 1;
     if (selectedCards.includes("ozolith")) unicornTotal += 1;
-    if (selectedCards.includes("innkeeper")) unicornTotal += 1;
+
     if (selectedCards.includes("branching_evolution")) unicornTotal *= 2;
+    if (selectedCards.includes("innkeeper")) unicornTotal *= 2;
+
     return unicornTotal;
   };
 
@@ -64,20 +66,24 @@ export default function App() {
       bonus += cardEffects.ozolith.bonusPerCounter;
       log.push("+1 from Ozolith");
     }
-    if (selectedCards.includes("innkeeper")) {
-      bonus += cardEffects.innkeeper.bonusPerCounter;
-      log.push("+1 from Innkeeper's Talent");
-    }
+
     if (selectedCards.includes("branching_evolution")) {
       multiplier *= cardEffects.branching_evolution.multiplier;
       log.push("×2 from Branching Evolution");
+    }
+    if (selectedCards.includes("innkeeper")) {
+      multiplier *= cardEffects.innkeeper.multiplier;
+      log.push("×2 from Innkeeper's Talent");
     }
 
     let vrestinCounters = (base + bonus) * multiplier;
     let unicornBonus = getUnicornBonus();
     const total = vrestinCounters + unicornBonus;
 
-    const newLog = [`Vrestin enters with ${total} +1/+1 counters (X = ${base})`, ...log];
+    const newLog = [
+      `Vrestin enters with ${total} +1/+1 counters (X = ${base})`,
+      ...log
+    ];
 
     let insectLog = [];
     const insectCount = base;
