@@ -7,14 +7,18 @@ const cardEffects = {
   hardened_scales: { bonusPerCounter: 1 },
   conclave_mentor: { bonusPerCounter: 1 },
   branching_evolution: { multiplier: 2 },
-  unicorn: { trigger: true, bonus: 1 }
+  unicorn: { trigger: true, bonus: 1 },
+  ozolith: { bonusPerCounter: 1 },
+  innkeeper: { bonusPerCounter: 1 }
 };
 
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
   { id: "conclave_mentor", name: "Conclave Mentor" },
   { id: "branching_evolution", name: "Branching Evolution" },
-  { id: "unicorn", name: "Good-Fortune Unicorn" }
+  { id: "unicorn", name: "Good-Fortune Unicorn" },
+  { id: "ozolith", name: "Ozolith, the Shattered Spire" },
+  { id: "innkeeper", name: "Innkeeper's Talent (Level 3)" }
 ];
 
 export default function App() {
@@ -34,6 +38,8 @@ export default function App() {
     let unicornTotal = cardEffects.unicorn.bonus;
     if (selectedCards.includes("hardened_scales")) unicornTotal += 1;
     if (selectedCards.includes("conclave_mentor")) unicornTotal += 1;
+    if (selectedCards.includes("ozolith")) unicornTotal += 1;
+    if (selectedCards.includes("innkeeper")) unicornTotal += 1;
     if (selectedCards.includes("branching_evolution")) unicornTotal *= 2;
     return unicornTotal;
   };
@@ -54,6 +60,14 @@ export default function App() {
       bonus += cardEffects.conclave_mentor.bonusPerCounter;
       log.push("+1 from Conclave Mentor");
     }
+    if (selectedCards.includes("ozolith")) {
+      bonus += cardEffects.ozolith.bonusPerCounter;
+      log.push("+1 from Ozolith");
+    }
+    if (selectedCards.includes("innkeeper")) {
+      bonus += cardEffects.innkeeper.bonusPerCounter;
+      log.push("+1 from Innkeeper's Talent");
+    }
     if (selectedCards.includes("branching_evolution")) {
       multiplier *= cardEffects.branching_evolution.multiplier;
       log.push("×2 from Branching Evolution");
@@ -65,7 +79,6 @@ export default function App() {
 
     const newLog = [`Vrestin enters with ${total} +1/+1 counters (X = ${base})`, ...log];
 
-    // Create Insects
     let insectLog = [];
     const insectCount = base;
     const insectCounters = selectedCards.includes("unicorn") ? getUnicornBonus() : 0;
@@ -95,7 +108,11 @@ export default function App() {
     setResultLog([...[...log, "[Combat Phase]", "-------------------"], ...resultLog]);
   };
 
-  const handleClearLog = () => setResultLog([]);
+  const handleClearLog = () => {
+    setResultLog([]);
+    setVrestinSummoned(false);
+  };
+
   const handleLogout = () => signOut(auth);
 
   return (
