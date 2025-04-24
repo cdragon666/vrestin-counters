@@ -1,158 +1,126 @@
 import { useState } from "react";
 import "./App.css";
+import { auth } from "./firebase";
+import { signOut } from "firebase/auth";
 
 const supportCards = [
-  { id: "hardened_scales", name: "Hardened Scales" },
-  { id: "branching_evolution", name: "Branching Evolution" },
-  { id: "kami", name: "Kami of Whispered Hopes" },
-  { id: "innkeeper", name: "Innkeeper's Talent" },
-  { id: "ozolith", name: "Ozolith, the Shattered Spire" },
-  { id: "conclave_mentor", name: "Conclave Mentor" },
-  { id: "unicorn", name: "Good-Fortune Unicorn" }
+  "Hardened Scales",
+  "Branching Evolution",
+  "Kami of Whispered Hopes",
+  "Innkeeper's Talent",
+  "Ozolith, the Shattered Spire",
+  "Conclave Mentor",
+  "Andúril Equipped",
+  "City's Blessing (10+ permanents)",
+  "Good-Fortune Unicorn (ETB trigger)"
 ];
 
 export default function App() {
   const [selectedCards, setSelectedCards] = useState([]);
-  const [vrestinX, setVrestinX] = useState(0);
-  const [creatures, setCreatures] = useState([]);
-  const [log, setLog] = useState([]);
+  const [xValue, setXValue] = useState("");
+  const [log, setLog] = useState("");
 
-  const toggleCard = (id) => {
+  const toggleCard = (card) => {
     setSelectedCards((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+      prev.includes(card) ? prev.filter((c) => c !== card) : [...prev, card]
     );
-  };
-
-  const has = (id) => selectedCards.includes(id);
-
-  const calculateCounters = (base) => {
-    let value = base;
-    let steps = [];
-
-    if (has("hardened_scales")) {
-      value += 1;
-      steps.push("+1 from Hardened Scales");
-    }
-    if (has("conclave_mentor")) {
-      value += 1;
-      steps.push("+1 from Conclave Mentor");
-    }
-    if (has("kami")) {
-      value += 1;
-      steps.push("+1 from Kami");
-    }
-    if (has("ozolith")) {
-      value += 1;
-      steps.push("+1 from Ozolith");
-    }
-    if (has("innkeeper")) {
-      value *= 2;
-      steps.push("×2 from Innkeeper's Talent");
-    }
-    if (has("branching_evolution")) {
-      value *= 2;
-      steps.push("×2 from Branching Evolution");
-    }
-
-    return [value, steps];
   };
 
   const summonVrestin = () => {
-    const x = parseInt(vrestinX);
-    if (!x) return;
+    let base = parseInt(xValue);
+    if (isNaN(base) || base <= 0) return;
 
-    const [counters, breakdown] = calculateCounters(x);
+    let result = `Vrestin enters with ${base} +1/+1 counters (X = ${base})`;
 
-    const unicornBoost = has("unicorn") ? 1 : 0;
-    const unicornSteps = has("unicorn") ? ["+1 from Unicorn"] : [];
-    let unicornCount = unicornBoost;
-
-    if (has("hardened_scales") && unicornBoost) {
-      unicornCount += 1;
-      unicornSteps.push("+1 from Hardened Scales");
+    if (selectedCards.includes("Hardened Scales")) {
+      base += 1;
+      result += "\n+1 from Hardened Scales";
     }
-    if (has("conclave_mentor") && unicornBoost) {
-      unicornCount += 1;
-      unicornSteps.push("+1 from Conclave Mentor");
+    if (selectedCards.includes("Conclave Mentor")) {
+      base += 1;
+      result += "\n+1 from Conclave Mentor";
     }
-    if (has("innkeeper") && unicornBoost) {
-      unicornCount *= 2;
-      unicornSteps.push("×2 from Innkeeper");
+    if (selectedCards.includes("Innkeeper's Talent")) {
+      base *= 2;
+      result += "\n×2 from Innkeeper's Talent";
     }
-    if (has("branching_evolution") && unicornBoost) {
-      unicornCount *= 2;
-      unicornSteps.push("×2 from Branching Evolution");
+    if (selectedCards.includes("Branching Evolution")) {
+      base *= 2;
+      result += "\n×2 from Branching Evolution";
     }
-
-    const finalVrestin = counters + unicornCount;
-
-    const newCreatures = [
-      { name: "Vrestin", base: [0, 0], counters: finalVrestin },
-      ...Array.from({ length: x }, (_, i) => ({
-        name: `Insect ${i + 1}`,
-        base: [1, 1],
-        counters: unicornCount
-      }))
-    ];
-
-    const vLine = `Vrestin enters with ${finalVrestin} +1/+1 counters (X = ${x})\n` +
-                  breakdown.map(b => `  ${b}`).join("\n") +
-                  (unicornSteps.length ? `\n+${unicornCount} from Unicorn:\n` + unicornSteps.map(s => `  ${s}`).join("\n") : "");
-
-    const insectLog = newCreatures.slice(1).map((c, i) =>
-      `${c.name} enters with ${c.counters} +1/+1 counters (1/1 base)`
-    );
-
-    setCreatures(newCreatures);
-    setLog((prev) => [vLine, ...insectLog, "-------------------", ...prev]);
+    setLog((prev) => `${result}\n-------------------\n` + prev);
   };
 
-  const clearLog = () => setLog([]);
-  const clearCreatures = () => setCreatures([]);
+  const attackAll = () => {
+    let counterGain = 1;
+    let breakdown = "\n[Combat Phase]";
+    if (selectedCards.includes("Innkeeper's Talent")) {
+      counterGain *= 2;
+      breakdown += `\nInnkeeper's Talent doubles → ${counterGain}`;
+    }
+    if (selectedCards.includes("Branching Evolution")) {
+      counterGain *= 2;
+      breakdown += `\nBranching Evolution doubles → ${counterGain}`;
+    }
+    setLog((prev) =>
+      `Vrestin attacks and gains ${counterGain} +1/+1 counters` +
+      `\nInsect 1 attacks and gains ${counterGain} +1/+1 counters` +
+      `\nInsect 2 attacks and gains ${counterGain} +1/+1 counters` +
+      breakdown +
+      "\n-------------------\n" +
+      prev
+    );
+  };
+
+  const clearLog = () => setLog("");
+  const clearCreatures = () => setXValue("");
+
+  const logout = async () => {
+    await signOut(auth);
+    window.location.reload();
+  };
 
   return (
     <div className="app-container">
-      <h1 className="title">MTG Mechanics Master</h1>
+      <h1 className="app-title">MTG Mechanics Master</h1>
+      <button className="logout-button" onClick={logout}>Logout</button>
+
       <div className="grid">
         <div className="left-panel">
-          <div>
-            <h2>Support Cards</h2>
-            <div className="card-list">
-              {supportCards.map((card) => (
-                <button
-                  key={card.id}
-                  className={`card-button ${has(card.id) ? "active" : ""}`}
-                  onClick={() => toggleCard(card.id)}
-                >
-                  {card.name}
-                </button>
-              ))}
-            </div>
+          <h2>Support Cards</h2>
+          <div className="card-list">
+            {supportCards.map((card) => (
+              <div
+                key={card}
+                className={`card-button ${selectedCards.includes(card) ? "active" : ""}`}
+                onClick={() => toggleCard(card)}
+              >
+                {card}
+              </div>
+            ))}
           </div>
 
-          <div>
-            <h2>Summon Vrestin</h2>
-            <input
-              type="number"
-              value={vrestinX}
-              onChange={(e) => setVrestinX(e.target.value)}
-              placeholder="X Value"
-            />
+          <h2>Summon Vrestin</h2>
+          <input
+            type="number"
+            placeholder="X Value"
+            value={xValue}
+            onChange={(e) => setXValue(e.target.value)}
+          />
+          <div style={{ marginTop: "0.5rem" }}>
             <button className="btn green" onClick={summonVrestin}>Summon</button>
             <button className="btn red" onClick={clearCreatures}>Clear Creatures</button>
           </div>
+
+          <button className="btn green" style={{ marginTop: "1rem" }} onClick={attackAll}>
+            Attack with All
+          </button>
         </div>
 
         <div className="right-panel">
           <h2>Creatures</h2>
-          {creatures.map((c, i) => (
-            <div className="creature-box" key={i}>
-              {c.name}: {c.base[0]}/{c.base[1]} (+{c.counters}/+{c.counters})
-            </div>
-          ))}
-
           <h2>Result Log</h2>
-          <textarea className="log-box" readOnly value={log.join("\n")} />
+          <textarea readOnly value={log} className="log-box" />
           <button className="btn red" onClick={clearLog}>Clear Log</button>
         </div>
       </div>
