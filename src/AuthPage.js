@@ -57,7 +57,6 @@ export default function AuthPage() {
           </button>
         </p>
       </div>
-      <div className="auth-background"></div>
     </div>
   );
 }
