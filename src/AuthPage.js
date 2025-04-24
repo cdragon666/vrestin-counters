@@ -1,7 +1,10 @@
 import { useState } from "react";
-import "./App.css";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "firebase/auth";
+import "./App.css";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -22,13 +25,17 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="auth-container">
+    <div className="auth-page forest-theme">
       <div className="auth-card">
-        <h1 className="auth-title">MTG Mechanics Master</h1>
-        <p className="auth-subtitle">
-          You bring the deck. We’ll handle the rules.<br />
-          Your smart, easy-to-use assistant for decoding the chaos of Magic: The Gathering.
-        </p>
+        <div className="auth-header">
+          <h1>MTG Mechanics Master</h1>
+          <p className="auth-description">
+            You bring the deck. We’ll handle the rules.
+            <br />
+            Your smart, easy-to-use assistant for decoding the chaos of Magic: The Gathering.
+          </p>
+          <div className="mana-coin">🪙</div>
+        </div>
         <input
           type="email"
           placeholder="Email"
@@ -43,15 +50,15 @@ export default function AuthPage() {
           onChange={(e) => setPassword(e.target.value)}
           className="auth-input"
         />
-        <button onClick={handleAuth} className="auth-button">
+        <button onClick={handleAuth} className="btn green">
           {isLogin ? "Login" : "Sign Up"}
         </button>
-        {error && <p className="auth-error">{error}</p>}
-        <p className="auth-toggle">
+        <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>
+        <p style={{ marginTop: "1rem" }}>
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="auth-link"
+            style={{ background: "none", border: "none", color: "cyan", cursor: "pointer" }}
           >
             {isLogin ? "Sign Up" : "Login"}
           </button>
