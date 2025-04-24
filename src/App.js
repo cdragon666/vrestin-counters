@@ -33,62 +33,55 @@ export default function App() {
     );
   };
 
-  const getUnicornBonus = () => {
-    if (!selectedCards.includes("unicorn")) return 0;
-    let bonus = cardEffects.unicorn.bonus;
+  const getBonusFromEffects = () => {
+    return ["hardened_scales", "conclave_mentor", "ozolith"].reduce(
+      (acc, id) => selectedCards.includes(id) ? acc + cardEffects[id].bonus : acc,
+      0
+    );
+  };
 
-    ["hardened_scales", "conclave_mentor", "ozolith"].forEach((id) => {
-      if (selectedCards.includes(id)) bonus += cardEffects[id].bonus;
-    });
-
-    if (selectedCards.includes("innkeeper")) bonus *= cardEffects.innkeeper.multiplier;
-    return bonus;
+  const applyMultipliers = (value) => {
+    let result = value;
+    if (selectedCards.includes("innkeeper")) {
+      result *= cardEffects.innkeeper.multiplier;
+    }
+    if (selectedCards.includes("branching_evolution")) {
+      result *= cardEffects.branching_evolution.multiplier;
+    }
+    return result;
   };
 
   const calculateVrestinCounters = () => {
     if (vrestinSummoned) return;
 
     const base = parseInt(vrestinX);
-    let additive = 0;
-    let log = [];
+    let additive = getBonusFromEffects();
+    let baseTotal = base + additive;
+    let counters = applyMultipliers(baseTotal);
 
-    ["hardened_scales", "conclave_mentor", "ozolith"].forEach((id) => {
-      if (selectedCards.includes(id)) {
-        additive += cardEffects[id].bonus;
-        log.push(`+${cardEffects[id].bonus} from ${supportCards.find(c => c.id === id).name}`);
-      }
-    });
+    let log = [`Vrestin enters with ${counters} +1/+1 counters (X = ${base})`];
+    if (additive > 0) log.push(`+${additive} from support cards`);
+    if (selectedCards.includes("innkeeper")) log.push(`×2 from Innkeeper's Talent`);
+    if (selectedCards.includes("branching_evolution")) log.push(`×2 from Branching Evolution`);
 
-    let counters = base + additive;
-
-    if (selectedCards.includes("innkeeper")) {
-      counters *= cardEffects.innkeeper.multiplier;
-      log.push(`×2 from Innkeeper's Talent`);
-    }
-    if (selectedCards.includes("branching_evolution")) {
-      counters *= cardEffects.branching_evolution.multiplier;
-      log.push(`×2 from Branching Evolution`);
-    }
-
-    let unicornBonus = getUnicornBonus();
-    const total = counters + unicornBonus;
-
-    const vrestinLog = [`Vrestin enters with ${total} +1/+1 counters (X = ${base})`, ...log];
+    const unicornBonus = applyMultipliers(selectedCards.includes("unicorn") ? 1 + getBonusFromEffects() : 0);
 
     let insectLog = [];
     for (let i = 1; i <= base; i++) {
-      const insectBonus = selectedCards.includes("unicorn") ? getUnicornBonus() : 0;
-      insectLog.push(`Insect ${i} enters with ${insectBonus} +1/+1 counters (1/1 base)`);
+      insectLog.push(`Insect ${i} enters with ${unicornBonus} +1/+1 counters (1/1 base)`);
     }
 
-    setResultLog([...[...insectLog, ...vrestinLog, "-------------------"], ...resultLog]);
+    setResultLog([...[...insectLog, ...log, "-------------------"], ...resultLog]);
     setVrestinSummoned(true);
   };
 
   const handleAttack = () => {
-    const bonus = getUnicornBonus();
+    let base = 1;
+    let total = base + getBonusFromEffects();
+    total = applyMultipliers(total);
+
     const all = ["Vrestin", ...Array(parseInt(vrestinX)).fill(0).map((_, i) => `Insect ${i + 1}`)];
-    const log = all.map((c) => `${c} attacks and gains ${bonus} +1/+1 counters`);
+    const log = all.map((c) => `${c} attacks and gains ${total} +1/+1 counters`);
     setResultLog([...[...log, "[Combat Phase]", "-------------------"], ...resultLog]);
   };
 
