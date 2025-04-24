@@ -6,19 +6,19 @@ import { auth } from "./firebase";
 const cardEffects = {
   hardened_scales: { bonus: 1 },
   conclave_mentor: { bonus: 1 },
-  branching_evolution: { multiplier: 2 },
-  unicorn: { trigger: true, bonus: 1 },
   ozolith: { bonus: 1 },
-  innkeeper: { multiplier: 2 }
+  unicorn: { trigger: true, bonus: 1 },
+  innkeeper: { multiplier: 2 },
+  branching_evolution: { multiplier: 2 }
 };
 
 const supportCards = [
   { id: "hardened_scales", name: "Hardened Scales" },
   { id: "conclave_mentor", name: "Conclave Mentor" },
-  { id: "branching_evolution", name: "Branching Evolution" },
-  { id: "unicorn", name: "Good-Fortune Unicorn" },
   { id: "ozolith", name: "Ozolith, the Shattered Spire" },
-  { id: "innkeeper", name: "Innkeeper's Talent (Level 3)" }
+  { id: "unicorn", name: "Good-Fortune Unicorn" },
+  { id: "innkeeper", name: "Innkeeper's Talent (Level 3)" },
+  { id: "branching_evolution", name: "Branching Evolution" }
 ];
 
 export default function App() {
@@ -35,74 +35,60 @@ export default function App() {
 
   const getUnicornBonus = () => {
     if (!selectedCards.includes("unicorn")) return 0;
-    let unicornAdd = cardEffects.unicorn.bonus;
-    if (selectedCards.includes("hardened_scales")) unicornAdd += cardEffects.hardened_scales.bonus;
-    if (selectedCards.includes("conclave_mentor")) unicornAdd += cardEffects.conclave_mentor.bonus;
-    if (selectedCards.includes("ozolith")) unicornAdd += cardEffects.ozolith.bonus;
+    let bonus = cardEffects.unicorn.bonus;
 
-    // Apply Innkeeper's Talent as multiplier after additions
-    if (selectedCards.includes("innkeeper")) unicornAdd *= cardEffects.innkeeper.multiplier;
-    return unicornAdd;
+    ["hardened_scales", "conclave_mentor", "ozolith"].forEach((id) => {
+      if (selectedCards.includes(id)) bonus += cardEffects[id].bonus;
+    });
+
+    if (selectedCards.includes("innkeeper")) bonus *= cardEffects.innkeeper.multiplier;
+    return bonus;
   };
 
   const calculateVrestinCounters = () => {
     if (vrestinSummoned) return;
 
-    let base = parseInt(vrestinX);
-    let bonus = 0;
+    const base = parseInt(vrestinX);
+    let additive = 0;
     let log = [];
 
-    if (selectedCards.includes("hardened_scales")) {
-      bonus += cardEffects.hardened_scales.bonus;
-      log.push("+1 from Hardened Scales");
-    }
-    if (selectedCards.includes("conclave_mentor")) {
-      bonus += cardEffects.conclave_mentor.bonus;
-      log.push("+1 from Conclave Mentor");
-    }
-    if (selectedCards.includes("ozolith")) {
-      bonus += cardEffects.ozolith.bonus;
-      log.push("+1 from Ozolith");
-    }
+    ["hardened_scales", "conclave_mentor", "ozolith"].forEach((id) => {
+      if (selectedCards.includes(id)) {
+        additive += cardEffects[id].bonus;
+        log.push(`+${cardEffects[id].bonus} from ${supportCards.find(c => c.id === id).name}`);
+      }
+    });
 
-    let preMultiplied = base + bonus;
+    let counters = base + additive;
+
     if (selectedCards.includes("innkeeper")) {
-      preMultiplied *= cardEffects.innkeeper.multiplier;
-      log.push("×2 from Innkeeper's Talent");
+      counters *= cardEffects.innkeeper.multiplier;
+      log.push(`×2 from Innkeeper's Talent`);
+    }
+    if (selectedCards.includes("branching_evolution")) {
+      counters *= cardEffects.branching_evolution.multiplier;
+      log.push(`×2 from Branching Evolution`);
     }
 
-    let vrestinCounters = preMultiplied;
     let unicornBonus = getUnicornBonus();
-    const total = vrestinCounters + unicornBonus;
+    const total = counters + unicornBonus;
 
-    const newLog = [`Vrestin enters with ${total} +1/+1 counters (X = ${base})`, ...log];
+    const vrestinLog = [`Vrestin enters with ${total} +1/+1 counters (X = ${base})`, ...log];
 
     let insectLog = [];
-    const insectCount = base;
-    const insectBonus = selectedCards.includes("unicorn") ? getUnicornBonus() : 0;
-
-    for (let i = 1; i <= insectCount; i++) {
-      insectLog.push(
-        `Insect ${i} enters with ${insectBonus} +1/+1 counters (1/1 base)`
-      );
+    for (let i = 1; i <= base; i++) {
+      const insectBonus = selectedCards.includes("unicorn") ? getUnicornBonus() : 0;
+      insectLog.push(`Insect ${i} enters with ${insectBonus} +1/+1 counters (1/1 base)`);
     }
 
-    setResultLog([
-      ...insectLog,
-      ...newLog,
-      "-------------------",
-      ...resultLog
-    ]);
+    setResultLog([...[...insectLog, ...vrestinLog, "-------------------"], ...resultLog]);
     setVrestinSummoned(true);
   };
 
   const handleAttack = () => {
-    const unicornBonus = getUnicornBonus();
-    const base = parseInt(vrestinX);
-    const allCreatures = ["Vrestin", ...Array(base).fill(0).map((_, i) => `Insect ${i + 1}`)];
-    const log = allCreatures.map(
-      (name) => `${name} attacks and gains ${unicornBonus} +1/+1 counters`
-    );
+    const bonus = getUnicornBonus();
+    const all = ["Vrestin", ...Array(parseInt(vrestinX)).fill(0).map((_, i) => `Insect ${i + 1}`)];
+    const log = all.map((c) => `${c} attacks and gains ${bonus} +1/+1 counters`);
     setResultLog([...[...log, "[Combat Phase]", "-------------------"], ...resultLog]);
   };
 
