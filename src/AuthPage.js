@@ -25,17 +25,15 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="auth-page forest-theme">
+    <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-header">
-          <h1>MTG Mechanics Master</h1>
-          <p className="auth-description">
-            You bring the deck. We’ll handle the rules.
-            <br />
-            Your smart, easy-to-use assistant for decoding the chaos of Magic: The Gathering.
-          </p>
-          <div className="mana-coin">🪙</div>
-        </div>
+        <h1>MTG Mechanics Master</h1>
+        <p className="auth-description">
+          You bring the deck. We’ll handle the rules.
+          <br />
+          Your smart, easy-to-use assistant for decoding the chaos of Magic: The Gathering.
+        </p>
+        <div className="mana-coin">🪙</div>
         <input
           type="email"
           placeholder="Email"
@@ -53,12 +51,12 @@ export default function AuthPage() {
         <button onClick={handleAuth} className="btn green">
           {isLogin ? "Login" : "Sign Up"}
         </button>
-        <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>
+        {error && <p className="auth-error">{error}</p>}
         <p style={{ marginTop: "1rem" }}>
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            style={{ background: "none", border: "none", color: "cyan", cursor: "pointer" }}
+            className="switch-auth"
           >
             {isLogin ? "Sign Up" : "Login"}
           </button>
