@@ -1,113 +1,131 @@
 import { useState } from "react";
 
 const supportCards = [
-  { id: 1, name: "Hardened Scales", bonus: 1 },
-  { id: 2, name: "Branching Evolution", multiplier: 2 },
-  { id: 3, name: "Kami of Whispered Hopes", multiplier: 2 },
-  { id: 4, name: "Innkeeper's Talent", multiplier: 2 },
-  { id: 5, name: "Ozolith, the Shattered Spire", bonus: 1 },
-  { id: 6, name: "Conclave Mentor", bonus: 1 },
-  { id: 7, name: "Andúril Equipped", bonus: 2 },
-  { id: 8, name: "City's Blessing (10+ permanents)", bonus: 1 },
-  { id: 9, name: "Good-Fortune Unicorn (ETB trigger)", bonus: 1 },
+  { id: 1, name: "Hardened Scales" },
+  { id: 2, name: "Branching Evolution" },
+  { id: 3, name: "Kami of Whispered Hopes" },
+  { id: 4, name: "Innkeeper's Talent" },
+  { id: 5, name: "Ozolith, the Shattered Spire" },
+  { id: 6, name: "Conclave Mentor" },
+  { id: 7, name: "Andúril Equipped" },
+  { id: 8, name: "City's Blessing (10+ permanents)" },
+  { id: 9, name: "Good-Fortune Unicorn (ETB trigger)" },
 ];
 
 export default function CounterCalculator() {
   const [selectedCards, setSelectedCards] = useState([]);
-  const [xValue, setXValue] = useState("");
-  const [result, setResult] = useState(0);
+  const [creatures, setCreatures] = useState([]);
+  const [xValue, setXValue] = useState(0);
   const [log, setLog] = useState([]);
 
-  const toggleCard = (id) => {
+  const toggleCard = (cardId) => {
     setSelectedCards((prev) =>
-      prev.includes(id) ? prev.filter((cardId) => cardId !== id) : [...prev, id]
+      prev.includes(cardId) ? prev.filter((id) => id !== cardId) : [...prev, cardId]
     );
   };
 
-  const calculate = () => {
-    let total = parseInt(xValue) || 0;
-    let bonus = 0;
-    let multiplier = 1;
-    let flat = 0;
-    let breakdown = [];
-
-    selectedCards.forEach((id) => {
-      const card = supportCards.find((c) => c.id === id);
-      if (card.bonus) {
-        bonus += card.bonus;
-        breakdown.push(`+${card.bonus} (bonus from ${card.name})`);
-      }
-      if (card.multiplier) {
-        multiplier *= card.multiplier;
-        breakdown.push(`×${card.multiplier} (multiplier from ${card.name})`);
-      }
-    });
-
-    const final = Math.ceil((total + bonus + flat) * multiplier);
-    setResult(final);
-
-    const logEntry = `Base: ${total} | ${breakdown.join(" | ")} => Total: ${final}`;
-    setLog((prev) => [logEntry, ...prev]);
+  const summonVrestin = () => {
+    const newCreature = {
+      id: creatures.length + 1,
+      base: xValue,
+      bonus: calculateBonus(),
+      multiplier: calculateMultiplier(),
+    };
+    setCreatures([...creatures, newCreature]);
+    addLog(`Vrestin summoned with base ${xValue} and bonuses.`);
   };
 
-  const clearLog = () => setLog([]);
+  const attackWithAll = () => {
+    const updated = creatures.map((creature) => ({
+      ...creature,
+      base: creature.base + 4,
+    }));
+    setCreatures(updated);
+    addLog(`All creatures attacked and gained 4 counters.`);
+  };
+
+  const calculateBonus = () => {
+    let bonus = 0;
+    if (selectedCards.includes(9)) bonus += 1;
+    return bonus;
+  };
+
+  const calculateMultiplier = () => {
+    let multiplier = 1;
+    if (selectedCards.includes(1)) multiplier += 0.5;
+    if (selectedCards.includes(2)) multiplier *= 2;
+    if (selectedCards.includes(3)) multiplier *= 2;
+    if (selectedCards.includes(4)) multiplier *= 2;
+    if (selectedCards.includes(6)) multiplier += 1;
+    if (selectedCards.includes(5)) multiplier += 0.0;
+    return multiplier;
+  };
+
+  const addLog = (message) => {
+    setLog((prev) => [...prev, message]);
+  };
+
+  const clearLog = () => {
+    setLog([]);
+  };
+
+  const clearCreatures = () => {
+    setCreatures([]);
+  };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-4">
-      <h1 className="text-3xl font-bold text-center">MTG Mechanics Master</h1>
+    <div className="min-h-screen bg-black text-white p-6">
+      <h1 className="text-3xl font-bold text-center mb-6">MTG Mechanics Master</h1>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {supportCards.map((card) => (
-          <div
-            key={card.id}
-            className={`p-3 rounded-md text-center cursor-pointer transition-all ${
-              selectedCards.includes(card.id)
-                ? "bg-green-600 scale-105"
-                : "bg-gray-700"
-            }`}
-            onClick={() => toggleCard(card.id)}
-          >
-            {card.name}
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">Summon Vrestin</h2>
-        <input
-          type="number"
-          placeholder="X Value"
-          value={xValue}
-          onChange={(e) => setXValue(e.target.value)}
-          className="w-full p-2 rounded-md bg-gray-800 text-white"
-        />
-        <div className="flex space-x-2">
-          <button
-            onClick={calculate}
-            className="px-4 py-2 bg-green-500 hover:bg-green-700 text-white rounded-md"
-          >
-            Summon
-          </button>
-          <button
-            onClick={() => setSelectedCards([])}
-            className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md"
-          >
-            Clear Creatures
-          </button>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Support Cards</h2>
+        <div className="flex flex-wrap gap-2">
+          {supportCards.map((card) => (
+            <button
+              key={card.id}
+              onClick={() => toggleCard(card.id)}
+              className={`px-4 py-2 rounded bg-gray-700 transition-all ${
+                selectedCards.includes(card.id) ? "bg-green-500 scale-105" : ""
+              }`}
+            >
+              {card.name}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">Result Log</h2>
-        <textarea
-          value={log.join("\n")}
-          readOnly
-          className="w-full h-40 p-2 rounded-md bg-gray-800 text-white"
-        />
-        <button
-          onClick={clearLog}
-          className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md mt-2"
-        >
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Summon Vrestin</h2>
+        <div className="flex gap-2 mb-2">
+          <input
+            type="number"
+            placeholder="X Value"
+            value={xValue}
+            onChange={(e) => setXValue(Number(e.target.value))}
+            className="p-2 bg-gray-800 rounded text-white"
+          />
+          <button onClick={summonVrestin} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+            Summon
+          </button>
+          <button onClick={clearCreatures} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
+            Clear Creatures
+          </button>
+        </div>
+        <button onClick={attackWithAll} className="bg-green-700 hover:bg-green-800 px-4 py-2 rounded mt-2">
+          Attack with All
+        </button>
+      </div>
+
+      <div>
+        <h2 className="text-xl font-semibold mb-2">Result Log</h2>
+        <div className="bg-gray-800 p-4 rounded mb-2 min-h-[150px]">
+          {log.length === 0 ? (
+            <p className="text-gray-400">No actions yet.</p>
+          ) : (
+            log.map((entry, idx) => <p key={idx}>{entry}</p>)
+          )}
+        </div>
+        <button onClick={clearLog} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">
           Clear Log
         </button>
       </div>
