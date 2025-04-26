@@ -93,3 +93,40 @@ textarea {
   padding: 0.5rem;
   resize: none;
 }
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #1a1a1a;
+}
+
+.auth-card {
+  background: #333;
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.auth-description {
+  margin-bottom: 1.5rem;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.mana-coin {
+  font-size: 2rem;
+  margin: 1rem 0;
+}
+
+.auth-input {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: #222;
+  color: white;
+}
