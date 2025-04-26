@@ -1,41 +1,72 @@
-body {
-  margin: 0;
-  background-color: #1e1e1e;
-  color: #fff;
-  font-family: Arial, sans-serif;
-}
-
-.App header {
+.auth-page {
+  min-height: 100vh;
+  background-color: #1a1a1a;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: #121212;
 }
 
-h1 {
-  margin: 0;
-}
-
-.logout-btn {
-  background-color: #4caf50;
-  border: none;
-  padding: 0.5rem 1rem;
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-main {
+.auth-card {
+  background-color: #2c2c2c;
   padding: 2rem;
-}
-
-.auth-message {
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
   text-align: center;
-  padding: 5rem;
+  width: 350px;
 }
 
-.auth-message h2 {
+.auth-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.auth-description {
+  font-size: 0.9rem;
+  color: #cccccc;
   margin-bottom: 1rem;
+}
+
+.mana-icon {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 5px;
+  border: none;
+  background: #f5f5f5;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #22c55e;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.auth-error {
+  color: red;
+  font-size: 0.85rem;
+}
+
+.auth-toggle {
+  color: #cccccc;
+}
+
+.auth-switch {
+  background: none;
+  border: none;
+  color: #22c55e;
+  cursor: pointer;
+  font-weight: bold;
 }
