@@ -1,119 +1,121 @@
-/* General */
+/* App.css */
+
 body {
-  background-color: #1a1a1a;
-  color: white;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
-}
-
-/* Auth Page */
-.auth-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.auth-card {
-  background-color: #2a2a2a;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
-  text-align: center;
-  max-width: 400px;
-  width: 90%;
-}
-
-.auth-description {
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-}
-
-.mana-coin {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-
-.auth-input {
-  display: block;
-  width: 100%;
-  margin: 0.5rem 0;
-  padding: 0.5rem;
-  border: none;
-  border-radius: 5px;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  margin-top: 0.5rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.green {
-  background-color: #4CAF50;
+  background-color: #121212; /* Dark, but not pure black */
   color: white;
+  font-family: 'Roboto', sans-serif;
 }
 
-.switch-auth {
-  background: none;
-  border: none;
-  color: #4CAF50;
-  cursor: pointer;
-}
-
-/* Error Message */
-.auth-error {
-  color: red;
-  font-size: 0.8rem;
-  margin-top: 0.5rem;
-}
-
-/* Main App Layout */
 .container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.main-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.left-panel,
+.right-panel {
+  flex: 1;
+  min-width: 300px;
   padding: 1rem;
 }
 
 .support-cards {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .support-cards button {
-  margin: 0.2rem;
-  background-color: #333;
+  background-color: #2e2e2e;
   color: white;
-  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
   cursor: pointer;
 }
 
-.support-cards button:hover {
-  background-color: #555;
+.support-cards button.active {
+  background-color: #4caf50;
 }
 
-input[type="number"], input[type="text"] {
-  padding: 0.5rem;
-  margin: 0.5rem 0;
-  border-radius: 5px;
-  border: none;
-}
-
-.result-log {
-  width: 100%;
-  min-height: 150px;
-  background-color: #111;
-  color: white;
+.section-title {
+  font-size: 1.5rem;
   margin-top: 1rem;
-  padding: 1rem;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  color: white;
   border-radius: 5px;
 }
 
 button {
-  margin: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.btn-green {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-red {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.result-log {
+  background-color: #1e1e1e;
+  padding: 1rem;
+  border-radius: 8px;
+  height: 300px;
+  overflow-y: auto;
+}
+
+.logout-button {
+  margin-bottom: 1rem;
+  background-color: #4caf50;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+/* Responsive for smaller screens */
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+  }
 }
