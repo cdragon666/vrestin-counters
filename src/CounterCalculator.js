@@ -67,7 +67,8 @@ export default function CounterCalculator() {
         {supportCards.map((card) => (
           <Card
             key={card.id}
-            className={\`cursor-pointer transition-all \${selectedCards.includes(card.id) ? "bg-green-200 scale-105" : ""}\`}
+className={`cursor-pointer transition-all ${selectedCards.includes(card.id) ? "bg-green-200 scale-105" : ""}`}
+
             onClick={() => toggleCard(card.id)}
           >
             <CardContent className="p-2 text-sm font-medium text-center">
