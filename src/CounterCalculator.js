@@ -1,52 +1,45 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 const supportCards = [
-  { id: "hardened_scales", name: "Hardened Scales", bonus: 1 },
-  { id: "branching_evolution", name: "Branching Evolution", multiplier: 2 },
-  { id: "kami", name: "Kami of the Whispered Hopes", multiplier: 2 },
-  { id: "conclave_mentor", name: "Conclave Mentor", bonus: 1 },
-  { id: "ozolith", name: "Ozolith, the Shattered Spire", bonus: 1 },
-  { id: "anduril", name: "Andúril, Narsil Reforged", flat: 2 },
+  { id: 1, name: "Hardened Scales", bonus: 1 },
+  { id: 2, name: "Branching Evolution", multiplier: 2 },
+  { id: 3, name: "Kami of Whispered Hopes", multiplier: 2 },
+  { id: 4, name: "Innkeeper's Talent", multiplier: 2 },
+  { id: 5, name: "Ozolith, the Shattered Spire", bonus: 1 },
+  { id: 6, name: "Conclave Mentor", bonus: 1 },
+  { id: 7, name: "Andúril Equipped", bonus: 2 },
+  { id: 8, name: "City's Blessing (10+ permanents)", bonus: 1 },
+  { id: 9, name: "Good-Fortune Unicorn (ETB trigger)", bonus: 1 },
 ];
 
 export default function CounterCalculator() {
   const [selectedCards, setSelectedCards] = useState([]);
-  const [baseCounters, setBaseCounters] = useState(0);
-  const [result, setResult] = useState(null);
+  const [xValue, setXValue] = useState("");
+  const [result, setResult] = useState(0);
   const [log, setLog] = useState([]);
 
   const toggleCard = (id) => {
     setSelectedCards((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((cardId) => cardId !== id) : [...prev, id]
     );
   };
 
-  const calculateTotal = () => {
-    let total = Number(baseCounters);
+  const calculate = () => {
+    let total = parseInt(xValue) || 0;
     let bonus = 0;
     let multiplier = 1;
     let flat = 0;
     let breakdown = [];
 
-    supportCards.forEach((card) => {
-      if (selectedCards.includes(card.id)) {
-        if (card.flat) {
-          flat += card.flat;
-          breakdown.push(`+${card.flat} (from ${card.name})`);
-        }
-        if (card.bonus) {
-          bonus += card.bonus;
-          breakdown.push(`+${card.bonus} (bonus from ${card.name})`);
-        }
-        if (card.multiplier) {
-          multiplier *= card.multiplier;
-          breakdown.push(`x${card.multiplier} (multiplier from ${card.name})`);
-        }
+    selectedCards.forEach((id) => {
+      const card = supportCards.find((c) => c.id === id);
+      if (card.bonus) {
+        bonus += card.bonus;
+        breakdown.push(`+${card.bonus} (bonus from ${card.name})`);
+      }
+      if (card.multiplier) {
+        multiplier *= card.multiplier;
+        breakdown.push(`×${card.multiplier} (multiplier from ${card.name})`);
       }
     });
 
@@ -60,59 +53,64 @@ export default function CounterCalculator() {
   const clearLog = () => setLog([]);
 
   return (
-    <div className="p-6 max-w-xl mx-auto space-y-4">
-      <h1 className="text-2xl font-bold text-center">+1/+1 Counter Calculator</h1>
+    <div className="p-6 max-w-6xl mx-auto space-y-4">
+      <h1 className="text-3xl font-bold text-center">MTG Mechanics Master</h1>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {supportCards.map((card) => (
-          <Card
+          <div
             key={card.id}
-className={`cursor-pointer transition-all ${selectedCards.includes(card.id) ? "bg-green-200 scale-105" : ""}`}
-
+            className={`p-3 rounded-md text-center cursor-pointer transition-all ${
+              selectedCards.includes(card.id)
+                ? "bg-green-600 scale-105"
+                : "bg-gray-700"
+            }`}
             onClick={() => toggleCard(card.id)}
           >
-            <CardContent className="p-2 text-sm font-medium text-center">
-              {card.name}
-            </CardContent>
-          </Card>
+            {card.name}
+          </div>
         ))}
       </div>
 
-      <div>
-        <Label htmlFor="base">Base Counters</Label>
-        <Input
-          id="base"
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold">Summon Vrestin</h2>
+        <input
           type="number"
-          value={baseCounters}
-          onChange={(e) => setBaseCounters(e.target.value)}
+          placeholder="X Value"
+          value={xValue}
+          onChange={(e) => setXValue(e.target.value)}
+          className="w-full p-2 rounded-md bg-gray-800 text-white"
         />
+        <div className="flex space-x-2">
+          <button
+            onClick={calculate}
+            className="px-4 py-2 bg-green-500 hover:bg-green-700 text-white rounded-md"
+          >
+            Summon
+          </button>
+          <button
+            onClick={() => setSelectedCards([])}
+            className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md"
+          >
+            Clear Creatures
+          </button>
+        </div>
       </div>
 
-      <Button onClick={calculateTotal} className="w-full">
-        Calculate
-      </Button>
-
-      {result !== null && (
-        <div className="text-xl font-semibold text-center">
-          Total Counters: {result}
-        </div>
-      )}
-
-      {log.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold">Calculation History</h2>
-            <Button variant="outline" size="sm" onClick={clearLog}>
-              Clear
-            </Button>
-          </div>
-          <Textarea
-            readOnly
-            className="w-full h-40 font-mono"
-            value={log.join("\n")}
-          />
-        </div>
-      )}
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold">Result Log</h2>
+        <textarea
+          value={log.join("\n")}
+          readOnly
+          className="w-full h-40 p-2 rounded-md bg-gray-800 text-white"
+        />
+        <button
+          onClick={clearLog}
+          className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md mt-2"
+        >
+          Clear Log
+        </button>
+      </div>
     </div>
   );
 }
