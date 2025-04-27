@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { auth } from "./firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "firebase/auth";
 import "./AuthPage.css";
 
-export default function AuthPage() {
+export default function AuthPage({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
@@ -12,9 +15,11 @@ export default function AuthPage() {
   const handleAuth = async () => {
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        setUser(userCredential.user);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        setUser(userCredential.user);
       }
     } catch (err) {
       setError(err.message);
@@ -25,7 +30,10 @@ export default function AuthPage() {
     <div className="auth-page">
       <div className="auth-card">
         <h1>MTG Mechanics Master</h1>
-        <p>You bring the deck. We'll handle the rules.</p>
+        <p className="auth-description">
+          You bring the deck. We'll handle the rules.<br />
+          Your smart, easy-to-use assistant for decoding the chaos of Magic: The Gathering.
+        </p>
         <input
           type="email"
           placeholder="Email"
@@ -40,15 +48,15 @@ export default function AuthPage() {
           onChange={(e) => setPassword(e.target.value)}
           className="auth-input"
         />
-        <button onClick={handleAuth} className="green">
+        <button onClick={handleAuth} className="auth-button">
           {isLogin ? "Login" : "Sign Up"}
         </button>
-        {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
-        <p style={{ marginTop: "1rem" }}>
+        {error && <p className="auth-error">{error}</p>}
+        <p className="auth-toggle">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            style={{ background: "none", border: "none", color: "cyan", cursor: "pointer" }}
+            className="auth-toggle-button"
           >
             {isLogin ? "Sign Up" : "Login"}
           </button>

@@ -1,23 +1,23 @@
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { useState } from "react";
 import AuthPage from "./AuthPage";
 import MechanicsMaster from "./MechanicsMaster";
 import ProtectedRoute from "./ProtectedRoute";
-import { auth } from "./firebase";
-import { useAuthState } from "react-firebase-hooks/auth";
-import "./App.css";
 
 function App() {
-  const [user] = useAuthState(auth);
+  const [user, setUser] = useState(null);
 
   return (
     <Router>
-      <div className="app-container">
+      <div className="App">
         <Routes>
-          <Route path="/login" element={<AuthPage />} />
+          <Route path="/" element={<AuthPage setUser={setUser} />} />
           <Route
-            path="/"
+            path="/mechanics-master"
             element={
-              user ? <MechanicsMaster /> : <Navigate to="/login" replace />
+              <ProtectedRoute user={user}>
+                <MechanicsMaster />
+              </ProtectedRoute>
             }
           />
         </Routes>
