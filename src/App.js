@@ -1,29 +1,24 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import AuthPage from "./AuthPage";
 import MechanicsMaster from "./MechanicsMaster";
 import ProtectedRoute from "./ProtectedRoute";
 
-function App() {
-  const [user, setUser] = useState(null);
-
+export default function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<AuthPage setUser={setUser} />} />
-          <Route
-            path="/mechanics-master"
-            element={
-              <ProtectedRoute user={user}>
-                <MechanicsMaster />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<AuthPage />} />
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <MechanicsMaster />
+            </ProtectedRoute>
+          }
+        />
+        {/* Redirect any unknown route to login */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </Router>
   );
 }
-
-export default App;
