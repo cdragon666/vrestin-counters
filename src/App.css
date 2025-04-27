@@ -1,93 +1,63 @@
 body {
-  background-color: #121212;
-  color: white;
+  background-color: #181818;
+  color: #ffffff;
   font-family: 'Arial', sans-serif;
   margin: 0;
   padding: 0;
 }
 
-h1, h2, h3 {
-  text-align: center;
-  margin: 1rem 0;
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 button {
+  padding: 8px 16px;
+  margin: 4px;
   border: none;
-  border-radius: 0.5rem;
-  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
   font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
 }
 
-button:hover {
-  transform: scale(1.05);
-}
-
-.button-green {
-  background-color: #34a853;
+button.green {
+  background-color: #4CAF50;
   color: white;
 }
 
-.button-red {
-  background-color: #ea4335;
+button.red {
+  background-color: #f44336;
   color: white;
 }
 
-.button-add-card {
-  background-color: #4285f4;
-  color: white;
-  margin-bottom: 1rem;
-}
-
-input[type="text"], input[type="number"] {
-  width: 100%;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  border: none;
-  margin: 0.5rem 0;
-}
-
-.container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  padding: 2rem;
-}
-
-.left-panel, .right-panel {
-  background-color: #1e1e1e;
-  padding: 1rem;
-  border-radius: 1rem;
-}
-
-.support-cards {
+/* Special auth page styling */
+.auth-page {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #181818;
 }
 
-.support-card {
-  background-color: #34a853;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+.auth-card {
+  background-color: #2a2a2a;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 0 10px #000;
+  width: 300px;
+  text-align: center;
 }
 
-.support-card.selected {
-  background-color: #2c7a46;
-  transform: scale(1.1);
-}
-
-textarea {
+.auth-input {
   width: 100%;
-  height: 200px;
-  border-radius: 1rem;
-  background-color: #121212;
-  color: white;
-  padding: 1rem;
-  resize: none;
-  border: none;
+  padding: 8px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.mana-coin {
+  font-size: 2rem;
+  margin: 1rem 0;
 }
