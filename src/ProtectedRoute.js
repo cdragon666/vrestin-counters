@@ -6,15 +6,8 @@ import AuthPage from "./AuthPage";
 import App from "./App";
 
 export default function ProtectedRoute() {
-  const [user, setUser] = useState(undefined); // undefined = loading
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
+  const [user, setUser] = useState(undefined);
+  useEffect(() => onAuthStateChanged(auth, setUser), []);
   if (user === undefined) return <div>Loading...</div>;
   return user ? <App /> : <AuthPage />;
 }
