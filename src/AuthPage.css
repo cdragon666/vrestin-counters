@@ -1,28 +1,32 @@
-.auth-page {
+.auth-wrapper {
+  min-height: 100vh;
+  background-color: #1b1b1b;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #1a1a1a;
-  color: white;
 }
 
 .auth-card {
   background-color: #2a2a2a;
   padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
   text-align: center;
-  width: 300px;
+  width: 320px;
+}
+
+.auth-card h1 {
+  color: white;
+  margin-bottom: 1rem;
 }
 
 .auth-description {
-  margin-bottom: 1rem;
+  color: #c0c0c0;
   font-size: 0.9rem;
-  color: #ccc;
+  margin-bottom: 1rem;
 }
 
-.mana-coin {
+.mana-symbol {
   font-size: 2rem;
   margin-bottom: 1rem;
 }
@@ -30,39 +34,30 @@
 .auth-input {
   width: 100%;
   padding: 0.5rem;
-  margin-bottom: 1rem;
-  border-radius: 5px;
+  margin: 0.3rem 0;
   border: none;
-  outline: none;
+  border-radius: 6px;
 }
 
 .auth-button {
   width: 100%;
-  padding: 0.6rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.auth-button.green {
-  background-color: #4caf50;
+  padding: 0.5rem;
+  background-color: #4CAF50;
   color: white;
-}
-
-.auth-button.green:hover {
-  background-color: #45a049;
-}
-
-.auth-error {
-  color: #ff4d4d;
+  border: none;
+  border-radius: 6px;
   margin-top: 0.5rem;
+  cursor: pointer;
+}
+
+.auth-button:hover {
+  background-color: #45a049;
 }
 
 .auth-toggle {
   background: none;
   border: none;
-  color: #00e5ff;
+  color: cyan;
   cursor: pointer;
-  font-weight: bold;
+  font-size: 0.9rem;
 }
