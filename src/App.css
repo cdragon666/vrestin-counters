@@ -1,132 +1,81 @@
-/* App.css */
-
 body {
-  background-color: #121212;
-  color: white;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
-  padding: 0;
+  background-color: #1a1a1a;
+  font-family: Arial, sans-serif;
+  color: white;
 }
 
-h1 {
+h1, h2 {
   text-align: center;
-  margin-top: 1rem;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 20px;
+  gap: 20px;
 }
 
 .support-cards {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-  margin: 1rem 0;
-}
-
-.card {
-  background-color: #2c2c2c;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
-}
-
-.card:hover {
-  background-color: #4caf50;
-  transform: scale(1.05);
-}
-
-.selected {
-  background-color: #4caf50;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.input-section {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 10px;
+  margin-bottom: 20px;
   justify-content: center;
 }
 
-input[type="number"], input[type="text"], input[type="email"], input[type="password"] {
-  padding: 0.5rem;
+.support-cards button {
+  background-color: #4CAF50;
+  color: white;
   border: none;
-  border-radius: 4px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.support-cards button:hover {
+  background-color: #45a049;
+}
+
+input[type="number"], input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: none;
 }
 
 button {
-  padding: 0.5rem 1rem;
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
-  font-weight: bold;
 }
 
 button.green {
-  background-color: #4caf50;
-  color: white;
+  background-color: #4CAF50;
 }
 
 button.red {
   background-color: #f44336;
-  color: white;
 }
 
-.result-log {
-  margin-top: 2rem;
-  padding: 1rem;
-  background-color: #1e1e1e;
-  border-radius: 8px;
-  min-height: 100px;
+button.green:hover {
+  background-color: #45a049;
+}
+
+button.red:hover {
+  background-color: #e53935;
 }
 
 textarea {
   width: 100%;
-  height: 150px;
-  background-color: #1e1e1e;
+  min-height: 150px;
+  border-radius: 6px;
+  padding: 10px;
+  background-color: #1a1a1a;
   color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem;
-  resize: none;
-}
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #1a1a1a;
-}
-
-.auth-card {
-  background: #333;
-  padding: 2rem;
-  border-radius: 1rem;
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-}
-
-.auth-description {
-  margin-bottom: 1.5rem;
-  color: #ccc;
-  font-size: 0.9rem;
-}
-
-.mana-coin {
-  font-size: 2rem;
-  margin: 1rem 0;
-}
-
-.auth-input {
-  width: 100%;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 0.5rem;
-  background: #222;
-  color: white;
+  border: 1px solid #333;
 }
