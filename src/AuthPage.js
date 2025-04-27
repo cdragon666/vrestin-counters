@@ -1,16 +1,18 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { auth } from "./firebase";
 import {
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
 } from "firebase/auth";
-import "./AuthPage.css"; // Important: Only touching login CSS now!
+import "./AuthPage.css";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleAuth = async () => {
     try {
@@ -19,21 +21,20 @@ export default function AuthPage() {
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
       }
+      navigate("/master");
     } catch (err) {
       setError(err.message);
     }
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-card">
+    <div className="auth-container">
+      <div className="auth-box">
         <h1>MTG Mechanics Master</h1>
         <p className="auth-description">
-          You bring the deck. We'll handle the rules.<br/>
-          Your smart assistant for decoding the chaos of Magic: The Gathering.
+          You bring the deck. We’ll handle the rules.<br />
+          Your smart, easy-to-use assistant for decoding the chaos of Magic: The Gathering.
         </p>
-        <div className="mana-symbol">🪙</div>
-
         <input
           type="email"
           placeholder="Email"
@@ -51,15 +52,12 @@ export default function AuthPage() {
         <button onClick={handleAuth} className="auth-button">
           {isLogin ? "Login" : "Sign Up"}
         </button>
-        <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>
-        <p style={{ marginTop: "1rem" }}>
+        {error && <p className="error-message">{error}</p>}
+        <p className="toggle-text">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="auth-toggle"
-          >
+          <span className="toggle-link" onClick={() => setIsLogin(!isLogin)}>
             {isLogin ? "Sign Up" : "Login"}
-          </button>
+          </span>
         </p>
       </div>
     </div>
