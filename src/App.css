@@ -1,81 +1,92 @@
 body {
-  margin: 0;
-  background-color: #1a1a1a;
-  font-family: Arial, sans-serif;
+  background-color: #1b1b1b;
   color: white;
-}
-
-h1, h2 {
-  text-align: center;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 .container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  justify-content: space-between;
   padding: 20px;
-  gap: 20px;
+  gap: 40px;
+}
+
+.container > div {
+  flex: 1;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+h2 {
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 .support-cards {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 20px;
-  justify-content: center;
 }
 
 .support-cards button {
-  background-color: #4CAF50;
+  background-color: #333;
   color: white;
+  padding: 6px 10px;
   border: none;
-  padding: 10px;
-  border-radius: 8px;
+  border-radius: 5px;
   cursor: pointer;
   transition: 0.2s;
+  font-size: 14px;
+}
+
+.support-cards button.green {
+  background-color: #4caf50;
 }
 
 .support-cards button:hover {
-  background-color: #45a049;
+  background-color: #4caf50;
 }
 
-input[type="number"], input[type="text"] {
+input[type="number"] {
   width: 100%;
-  padding: 10px;
+  padding: 8px;
   margin-bottom: 10px;
-  border-radius: 6px;
   border: none;
+  border-radius: 5px;
 }
 
 button {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  margin-right: 10px;
   border: none;
+  border-radius: 5px;
+  background-color: #4caf50;
+  color: white;
   cursor: pointer;
-}
-
-button.green {
-  background-color: #4CAF50;
+  transition: 0.2s;
 }
 
 button.red {
   background-color: #f44336;
 }
 
-button.green:hover {
-  background-color: #45a049;
-}
-
-button.red:hover {
-  background-color: #e53935;
+button:hover {
+  opacity: 0.8;
 }
 
 textarea {
   width: 100%;
-  min-height: 150px;
-  border-radius: 6px;
-  padding: 10px;
-  background-color: #1a1a1a;
+  height: 300px;
+  margin-bottom: 10px;
+  background-color: #1b1b1b;
   color: white;
-  border: 1px solid #333;
+  border: 1px solid #444;
+  border-radius: 5px;
+  resize: none;
+  padding: 10px;
 }
