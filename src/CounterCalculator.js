@@ -1,133 +1,123 @@
-import { useState } from "react";
+// --- CounterCalculator.js ---
 
-const supportCards = [
-  { id: 1, name: "Hardened Scales" },
-  { id: 2, name: "Branching Evolution" },
-  { id: 3, name: "Kami of Whispered Hopes" },
-  { id: 4, name: "Innkeeper's Talent" },
-  { id: 5, name: "Ozolith, the Shattered Spire" },
-  { id: 6, name: "Conclave Mentor" },
-  { id: 7, name: "Andúril Equipped" },
-  { id: 8, name: "City's Blessing (10+ permanents)" },
-  { id: 9, name: "Good-Fortune Unicorn (ETB trigger)" },
-];
+import { useState } from "react";
+import "./App.css";
 
 export default function CounterCalculator() {
+  const [supportCards, setSupportCards] = useState([
+    { id: 1, name: "Hardened Scales", bonus: 1 },
+    { id: 2, name: "Branching Evolution", multiplier: 2 },
+    { id: 3, name: "Kami of Whispered Hopes", bonus: 1 },
+    { id: 4, name: "Innkeeper's Talent", bonus: 1 },
+    { id: 5, name: "Ozolith, the Shattered Spire", bonus: 1 },
+    { id: 6, name: "Conclave Mentor", bonus: 1 },
+    { id: 7, name: "Andúril Equipped", bonus: 1 },
+    { id: 8, name: "City's Blessing (10+ permanents)", bonus: 1 },
+    { id: 9, name: "Good-Fortune Unicorn (ETB trigger)", bonus: 1 }
+  ]);
+
   const [selectedCards, setSelectedCards] = useState([]);
-  const [creatures, setCreatures] = useState([]);
   const [xValue, setXValue] = useState(0);
   const [log, setLog] = useState([]);
 
-  const toggleCard = (cardId) => {
+  const toggleCard = (id) => {
     setSelectedCards((prev) =>
-      prev.includes(cardId) ? prev.filter((id) => id !== cardId) : [...prev, cardId]
+      prev.includes(id) ? prev.filter((card) => card !== id) : [...prev, id]
     );
   };
 
-  const summonVrestin = () => {
-    const newCreature = {
-      id: creatures.length + 1,
-      base: xValue,
-      bonus: calculateBonus(),
-      multiplier: calculateMultiplier(),
-    };
-    setCreatures([...creatures, newCreature]);
-    addLog(`Vrestin summoned with base ${xValue} and bonuses.`);
-  };
-
-  const attackWithAll = () => {
-    const updated = creatures.map((creature) => ({
-      ...creature,
-      base: creature.base + 4,
-    }));
-    setCreatures(updated);
-    addLog(`All creatures attacked and gained 4 counters.`);
-  };
-
-  const calculateBonus = () => {
-    let bonus = 0;
-    if (selectedCards.includes(9)) bonus += 1;
-    return bonus;
-  };
-
-  const calculateMultiplier = () => {
+  const handleSummon = () => {
+    let base = parseInt(xValue) || 0;
+    let total = base;
+    let breakdown = [];
     let multiplier = 1;
-    if (selectedCards.includes(1)) multiplier += 0.5;
-    if (selectedCards.includes(2)) multiplier *= 2;
-    if (selectedCards.includes(3)) multiplier *= 2;
-    if (selectedCards.includes(4)) multiplier *= 2;
-    if (selectedCards.includes(6)) multiplier += 1;
-    if (selectedCards.includes(5)) multiplier += 0.0;
-    return multiplier;
+
+    selectedCards.forEach((cardId) => {
+      const card = supportCards.find((c) => c.id === cardId);
+      if (card) {
+        if (card.bonus) {
+          total += card.bonus;
+          breakdown.push(`+${card.bonus} from ${card.name}`);
+        }
+        if (card.multiplier) {
+          multiplier *= card.multiplier;
+          breakdown.push(`x${card.multiplier} from ${card.name}`);
+        }
+      }
+    });
+
+    const finalCounters = total * multiplier;
+
+    const newLog = `Summoned Vrestin with X = ${base}\n` +
+                   `Vrestin creates ${base} Insect creature tokens (1/1)\n` +
+                   (breakdown.length > 0 ? `Applied boosts:\n${breakdown.join("\n")}\n` : "") +
+                   `Final Vrestin Power/Toughness: ${finalCounters}/${finalCounters}`;
+
+    setLog((prev) => [newLog, ...prev]);
   };
 
-  const addLog = (message) => {
-    setLog((prev) => [...prev, message]);
+  const handleAddCard = () => {
+    const name = prompt("Enter new card name:");
+    if (!name) return;
+    const type = prompt("Type 'bonus' or 'multiplier':");
+    const value = parseInt(prompt("Enter value:"));
+    if (!type || isNaN(value)) return;
+
+    const newCard = {
+      id: Date.now(),
+      name,
+      [type]: value
+    };
+
+    setSupportCards((prev) => [...prev, newCard]);
   };
 
-  const clearLog = () => {
-    setLog([]);
-  };
-
-  const clearCreatures = () => {
-    setCreatures([]);
-  };
+  const clearLog = () => setLog([]);
+  const clearCreatures = () => setSelectedCards([]);
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">MTG Mechanics Master</h1>
+    <div className="container">
+      <h1>MTG Mechanics Master</h1>
+      <button className="btn red" onClick={() => alert("Logged out!")}>Logout</button>
 
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Support Cards</h2>
-        <div className="flex flex-wrap gap-2">
+      <div className="section">
+        <h2>Support Cards</h2>
+        <div className="card-grid">
           {supportCards.map((card) => (
             <button
               key={card.id}
+              className={`card-btn ${selectedCards.includes(card.id) ? "selected" : ""}`}
               onClick={() => toggleCard(card.id)}
-              className={`px-4 py-2 rounded bg-gray-700 transition-all ${
-                selectedCards.includes(card.id) ? "bg-green-500 scale-105" : ""
-              }`}
             >
               {card.name}
             </button>
           ))}
         </div>
+        <button className="btn green" onClick={handleAddCard}>Add Card</button>
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Summon Vrestin</h2>
-        <div className="flex gap-2 mb-2">
-          <input
-            type="number"
-            placeholder="X Value"
-            value={xValue}
-            onChange={(e) => setXValue(Number(e.target.value))}
-            className="p-2 bg-gray-800 rounded text-white"
-          />
-          <button onClick={summonVrestin} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
-            Summon
-          </button>
-          <button onClick={clearCreatures} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
-            Clear Creatures
-          </button>
-        </div>
-        <button onClick={attackWithAll} className="bg-green-700 hover:bg-green-800 px-4 py-2 rounded mt-2">
-          Attack with All
-        </button>
+      <div className="section">
+        <h2>Summon Vrestin</h2>
+        <input
+          type="number"
+          value={xValue}
+          onChange={(e) => setXValue(e.target.value)}
+          className="input"
+          placeholder="Enter X Value"
+        />
+        <button className="btn green" onClick={handleSummon}>Summon Vrestin</button>
+        <button className="btn green" onClick={handleSummon}>Attack with All</button>
+        <button className="btn red" onClick={clearCreatures}>Clear Creatures</button>
       </div>
 
-      <div>
-        <h2 className="text-xl font-semibold mb-2">Result Log</h2>
-        <div className="bg-gray-800 p-4 rounded mb-2 min-h-[150px]">
-          {log.length === 0 ? (
-            <p className="text-gray-400">No actions yet.</p>
-          ) : (
-            log.map((entry, idx) => <p key={idx}>{entry}</p>)
-          )}
+      <div className="section">
+        <h2>Result Log</h2>
+        <div className="log-box">
+          {log.length ? log.map((entry, idx) => (
+            <pre key={idx}>{entry}</pre>
+          )) : "No actions yet."}
         </div>
-        <button onClick={clearLog} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">
-          Clear Log
-        </button>
+        <button className="btn red" onClick={clearLog}>Clear Log</button>
       </div>
     </div>
   );
